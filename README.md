@@ -62,7 +62,7 @@ project/
 
   ```bash
   pip install -U pip
-  pip install qiskit numpy scipy scikit-learn matplotlib tomli tomli-w
+  pip install -r requirements.txt
   ```
 
 ---
