@@ -1,0 +1,74 @@
+# ============================
+# config.toml (v1.0)
+#
+# Local and Multi-Scale Strategies to Mitigate Exponential Concentration in Quantum Kernels
+# First functional version for immediate use
+# ============================
+
+# ---------- Global run settings ----------
+[run]
+seed = 42
+dataset = "make_circles"         # "make_circles" | "iris"
+n_samples = 150                  # ignored for "iris"
+test_size = 0.2
+val_size  = 0.2
+standardize = true               # apply StandardScaler to X before kernel eval (recommended)
+
+# ---------- Shared feature map ----------
+[feature_map]
+name = "zz"                      # shared across kernels
+depth = 1                        # start small (1 or 2)
+backend = "statevector"          # "statevector" | "sampling"
+shots = 0                        # 0 => statevector; >0 => sampling mode
+
+# ---------- Kernels (enable/disable individually) ----------
+[global_kernel]
+enabled = true
+# Optional extras for later:
+# noise_model = ""               # path to noise model (if any)
+
+[local_kernel]
+enabled = true
+# Assume 4 qubits (d=4) → two contiguous pairs
+partitions = [[0,1],[2,3]]       # list of patches; adjust if qubit count changes
+method = "subcircuits"           # "subcircuits" | "rdm"
+agg = "mean"                     # "mean" | "weighted"
+weights = []                     # [] => equal weights
+
+[multiscale_kernel]
+enabled = true
+# Two scales: S1 (pairs), S2 (all qubits)
+scales = [
+  [[0,1],[2,3]],
+  [[0,1,2,3]]
+]
+weights = [0.5, 0.5]             # initial mixing; can be tuned on validation
+
+# ---------- SVM baseline (precomputed kernels) ----------
+[svm]
+C = [0.1, 1.0, 10.0]             # small grid
+# For classical baselines (optional future use):
+# gamma = [0.1, 1.0]             # for RBF
+# degree = [2, 3]                # for Poly
+
+# ---------- Paths ----------
+[paths]
+outputs = "outputs"              # K_*.npy, meta_*.json, splits_*.json, metrics.csv
+figs    = "figs"                 # *_matrix.png, *_offdiag_hist.png, *_spectrum.png
+
+# ---------- Diagnostics & saving ----------
+[diagnostics]
+save_matrix = true
+save_offdiag_hist = true
+save_spectrum = true
+dpi = 160
+
+# ---------- Reproducibility & logging ----------
+[repro]
+numpy_seed = 42
+qiskit_seed_transpiler = 42
+qiskit_seed_simulator = 42
+
+[logging]
+level = "INFO"                   # "DEBUG" | "INFO" | "WARN" | "ERROR"
+timestamp = true
