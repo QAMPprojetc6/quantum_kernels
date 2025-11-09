@@ -1,0 +1,3 @@
+qiskit[visualization]==2.2.3
+scikit-learn>=1.4
+scipy>=1.11
