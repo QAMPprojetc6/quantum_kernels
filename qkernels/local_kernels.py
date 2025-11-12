@@ -7,12 +7,12 @@ Unified API:
                  agg="mean", weights=None, **kwargs)
 
 Returns:
-    K: (n, n) ndarray (symmetric, ~PSD)
+    K: (n, n) ndarray (Symmetric, Positive Semi Definite)
     meta: dict
 
-TODO:
- - Implement per-patch overlaps (subcircuits) OR reduced density matrices (RDMs).
- - Support aggregation (mean or weighted).
+Methods:
+ - Per-patch overlaps (subcircuits)
+ - Reduced density matrices (RDMs)
 """
 
 from typing import Tuple, Dict, Any, Iterable, List, Optional
@@ -124,7 +124,7 @@ def build_kernel(
             grams.append(G)
 
     else:
-        raise ValueError(f"Unknown method: {method}")
+        raise ValueError(f"Unknown method: {method}. Try using 'subcircuits' or 'rdm'")
 
     # Aggregate patches, then clean up
     K = _aggregate(grams, agg, weights)
