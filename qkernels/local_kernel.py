@@ -21,18 +21,80 @@ from qiskit.quantum_info import Statevector, partial_trace, state_fidelity, Dens
 from feature_maps import get_feature_map_spec
 
 
-def _eigenclip_psd(K: np.ndarray, clip: float = 1e-12) -> np.ndarray:
+def _eigenclip_psd(
+    K: np.ndarray, 
+    clip: float = 1e-12
+) -> np.ndarray:
+    """
+    Ensure the kernel matrix is positive semi-definite (PSD)
+    by clipping small negative eigenvalues caused by numerical noise.
+
+    Parameters
+    ----------
+    K: np.ndarray
+        Input kernel matrix (must be square and symmetric or nearly symmetric).
+    clip: float, optional
+        Threshold below which eigenvalues are set to zero (default: 1e-12).
+
+    Returns
+    -------
+    np.ndarray
+        A PSD-corrected version of K.
+    """
     w, V = np.linalg.eigh((K + K.T) * 0.5)
     w[w < clip] = 0.0
     return (V * w) @ V.T
 
-def _normalize_kernel(K: np.ndarray) -> np.ndarray:
+def _normalize_kernel(
+    K: np.ndarray
+)-> np.ndarray:
+    """
+    Normalize the kernel matrix so that all diagonal entries are 1.
+
+    This ensures self-similarity (K[i, i]) = 1 for every sample,
+    which keeps the kernel scale-consistent across different datasets.
+
+    Parameters
+    ----------
+    K: np.ndarray
+        Input kernel matrix (square).
+
+    Returns
+    -------
+    np.ndarray
+        Normalized kernel matrix with unit diagonal.
+    """
     d = np.sqrt(np.clip(np.diag(K), 1e-12, None))
     K = K / d[:, None] / d[None, :]
     np.fill_diagonal(K, 1.0)
     return K
 
-def _aggregate(grams: List[np.ndarray], agg: str, weights: Optional[List[float]]) -> np.ndarray:
+def _aggregate(
+    grams: List[np.ndarray],
+    agg: str,
+    weights: Optional[List[float]]
+) -> np.ndarray:
+    """
+    Combine multiple patch-wise kernel (Gram) matrices
+    into a single global kernel using mean or weighted aggregation.
+
+    Parameters
+    ----------
+    grams : List[np.ndarray]
+        List of kernel matrices, one for each patch or subsystem.
+    agg: str
+        Aggregation strategy. Options:
+        - "mean"    : simple arithmetic mean of all patch kernels
+        - "weighted": weighted mean based on user-supplied weights
+    weights: Optional[List[float]], optional
+        List of non-negative weights (one per patch). Used only if agg = "weighted".
+        The weights will be normalized to sum to 1.
+
+    Returns
+    -------
+    np.ndarray
+        Aggregated kernel matrix combining all patches.
+    """
     if agg == "weighted":
         w = np.asarray(weights, float)
         w = w / w.sum()
@@ -57,16 +119,16 @@ def build_kernel(
 
     Parameters
     ----------
-    X : np.ndarray (n_samples, d)
+    X: np.ndarray (n_samples, d)
     partitions : iterable of iterables (e.g., [(0,1), (2,3)])
-    method : "subcircuits" | "rdm"
-    agg : "mean" | "weighted"
-    weights : list of floats (same length as number of patches) or None
+    method: "subcircuits" | "rdm"
+    agg: "mean" | "weighted"
+    weights: list of floats (same length as number of patches) or None
 
     Returns
     -------
-    K : np.ndarray (n, n)
-    meta : dict
+    K: np.ndarray (n, n)
+    meta: dict
     """
 
     X = np.asarray(X, dtype=float)
