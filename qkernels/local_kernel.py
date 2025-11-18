@@ -18,7 +18,7 @@ Methods:
 from typing import Tuple, Dict, Any, Iterable, List, Optional
 import numpy as np
 from qiskit.quantum_info import Statevector, partial_trace, state_fidelity, DensityMatrix
-from feature_maps import get_feature_map_spec
+from .feature_maps import get_feature_map_spec
 
 
 def _eigenclip_psd(
@@ -107,6 +107,7 @@ def build_kernel(
     X: np.ndarray,
     feature_map: str = "zz_manual",     # "zz_manual" | "zz_manual_canonical" | "zz_qiskit"
     depth: int = 1,
+    backend="statevector",  # "statevector" | "sampling"   # for unified API
     entanglement: Optional[str] = None, # "linear" | "ring"
     partitions: Optional[Iterable[Iterable[int]]] = None,
     method: str = "rdm",        # "subcircuits" or "rdm"
