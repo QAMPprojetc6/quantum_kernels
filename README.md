@@ -149,6 +149,9 @@ Kernel-specific `**kwargs`:
 
 ## 6) Quickstart
 
+### Ready-to-run recipes
+For copy-paste one-liners on `make_circles` and `iris` (Baseline, Local-only, Multi-Scale), see **[docs/RECIPES.md](docs/RECIPES.md)**.
+
 ### 6.1 Generate kernels & figures (all enabled kernels in `config.toml`)
 
 ```bash
