@@ -156,8 +156,18 @@ def artifact_paths(out_prefix: Path, figs_dir: Path, centered: bool) -> Dict[str
 
 
 def save_json(path: str, obj: Dict) -> None:
+    def _default(o):
+        # NumPy scalars -> Python scalars
+        if isinstance(o, (np.integer, np.floating, np.bool_)):
+            return o.item()
+        # NumPy arrays -> lists
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        # Fallback
+        raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
+
     with open(path, "w") as f:
-        json.dump(obj, f, indent=2)
+        json.dump(obj, f, indent=2, default=_default)
 
 
 def save_splits(path: str, train_idx: np.ndarray, val_idx: np.ndarray, test_idx: np.ndarray, y_all: np.ndarray) -> None:
