@@ -7,8 +7,8 @@ def _sig_ok(fn, required_params):
     for p in required_params:
         assert p in params, f"Missing param '{p}' in {fn.__module__}.{fn.__name__}"
 
-def test_global_kernel_signature():
-    from qkernels.global_kernel import build_kernel
+def test_baseline_kernel_signature():
+    from qkernels.baseline_kernel import build_kernel
     _sig_ok(build_kernel, ["X","feature_map","depth","backend","seed"])
     # It does not execute (it may throw NotImplementedError)
 

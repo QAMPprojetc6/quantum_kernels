@@ -1,14 +1,24 @@
 """
-Diagnostics for precomputed kernels:
- - Heatmap of K
- - Off-diagonal histogram
- - Eigen-spectrum
+Diagnostics for precomputed kernel matrices (Gram matrices).
+
+Produces three standard plots:
+  - Heatmap of K (matrix structure)
+  - Off-diagonal histogram (concentration / contrast)
+  - Eigen-spectrum of symmetrized K (effective rank proxy)
+
+This script is kernel-agnostic: it works for baseline, local, and multi-scale
+as long as you provide a saved K.npy.
 
 CLI:
     python analysis/diagnostics.py \
-      --kernel outputs/K_global-make_circles_42.npy \
-      --save-prefix figs/global-make_circles_42
+      --kernel outputs/K_baseline-make_circles_42.npy \
+      --save-prefix figs/baseline-make_circles_42
+
+Notes:
+- If a centered-kernel diagnostics is needed, pass a centered K (e.g., K_centered.npy).
+- Spectrum is computed on Ks = 0.5*(K + K.T) to avoid tiny numerical asymmetry.
 """
+
 
 import argparse
 import json

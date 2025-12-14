@@ -51,7 +51,7 @@ def test_cli_main_generates_all_files_and_meta(tmp_path: Path):
     kpath = tmp_path / "K.npy"
     np.save(kpath, K)
 
-    meta = {"kernel": "global", "seed": 42}
+    meta = {"kernel": "baseline", "seed": 42}
     mpath = tmp_path / "meta.json"
     mpath.write_text(__import__("json").dumps(meta))
 

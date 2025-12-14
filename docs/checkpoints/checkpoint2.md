@@ -36,4 +36,3 @@ Where does your project stand today?
 ### Path forward
 
 Clear plan for completing your MVP by January 30
-

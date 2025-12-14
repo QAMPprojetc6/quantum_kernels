@@ -145,7 +145,7 @@ project/
   qkernels/
     __init__.py
     feature_maps.py
-    global_kernel.py       # Person A
+    baseline_kernel.py     # Person A
     local_kernel.py        # Person B
     multiscale_kernel.py   # Person C
   analysis/
@@ -206,7 +206,7 @@ depth = 1
 backend = "statevector"    # or "sampling"
 shots = 0                  # 0 = statevector; >0 = sampling
 
-[global_kernel]
+[baseline_kernel]
 enabled = true
 
 [local_kernel]
