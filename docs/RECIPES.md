@@ -102,6 +102,42 @@ python -m scripts.run_multiscale_demo --dataset iris --feature-map zz_manual_can
 
 ---
 
+# Local Kernel (patch-wise) — quick recipes
+
+These commands run the **Local (patch-wise) kernel** implemented in `scripts/run_local_demo.py`
+and save outputs under `outputs/local/` and figures under `figs/local/`.
+
+### Dataset: `make_circles` (d = 2)
+
+**Local-only (1q patches)**
+```
+python -m scripts.run_local_demo --dataset make_circles --n-samples 150 --feature-map zz_qiskit --depth 1 --entanglement linear --partitions '[[0],[1]]' --method rdm --agg mean --out-prefix outputs/local/loc_circles_local1q
+```
+
+
+### Dataset: `iris` (d = 4)
+
+**Local-only (1q patches)**
+```
+python -m scripts.run_local_demo --dataset iris --feature-map zz_manual_canonical --depth 1 --entanglement ring --partitions '[[0],[1],[2],[3]]' --method rdm --agg mean --out-prefix outputs/local/loc_iris_local1q
+```
+
+**Local-only (2q patches)**
+```
+python -m scripts.run_local_demo --dataset iris --feature-map zz_manual_canonical --depth 1 --entanglement ring --partitions '[[0,1],[2,3]]' --method rdm --agg mean --out-prefix outputs/local/loc_iris_local2q --center --report-rank
+```
+
+
+### Optional variants
+- Use Hilbert–Schmidt similarity on RDMs: add `--rdm-metric hs`
+- Weighted aggregation (requires weights matching the number of patches):  
+  `--agg weighted --weights '[0.5, 0.5]'`
+
+---
+
+
+---
+
 # Baseline Kernel (global fidelity) — quick recipes
 
 These commands run the **true baseline** implemented in `scripts/run_baseline_demo.py`

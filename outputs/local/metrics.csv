@@ -1,0 +1,4 @@
+out_prefix,dataset,feature_map,depth,best_C,val_acc,test_acc
+outputs\local\loc_circles_local1q,make_circles,zz_qiskit,1,0.1,0.4666666666666667,0.4666666666666667
+outputs\local\loc_iris_local1q,iris,zz_manual_canonical,1,10.0,0.9,0.6666666666666666
+outputs\local\loc_iris_local2q,iris,zz_manual_canonical,1,1.0,0.8666666666666667,0.7

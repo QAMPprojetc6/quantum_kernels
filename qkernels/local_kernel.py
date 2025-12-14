@@ -96,44 +96,93 @@ def _aggregate(
         Aggregated kernel matrix combining all patches.
     """
     if agg == "weighted":
-        w = np.asarray(weights, float)
-        w = w / w.sum()
-        return sum(w[i] * grams[i] for i in range(len(grams)))
-    return sum(grams) / float(len(grams))
+        if weights is None:
+            raise ValueError("weights must be provided when agg='weighted'.")
+        w = np.asarray(weights, dtype=float)
+        if w.ndim != 1 or len(w) != len(grams):
+            raise ValueError("weights must be a 1D list with the same length as grams.")
+        if np.any(w < 0):
+            raise ValueError("weights must be non-negative.")
+        s = float(w.sum())
+        if s <= 0:
+            raise ValueError("weights must sum to a positive value.")
+        w = w / s
+        return sum((w[i] * grams[i] for i in range(len(grams))), start=np.zeros_like(grams[0], dtype=float))
 
+    return sum(grams, start=np.zeros_like(grams[0], dtype=float)) / float(len(grams))
 
 
 def build_kernel(
     X: np.ndarray,
-    feature_map: str = "zz_manual",     # "zz_manual" | "zz_manual_canonical" | "zz_qiskit"
+    feature_map: str = "zz_manual",  # "zz_manual" | "zz_manual_canonical" | "zz_qiskit"
     depth: int = 1,
-    backend="statevector",  # "statevector" | "sampling"   # for unified API
-    entanglement: Optional[str] = None, # "linear" | "ring"
-    partitions: Optional[Iterable[Iterable[int]]] = None,
-    method: str = "rdm",        # "subcircuits" or "rdm"
-    agg: str = "mean",                  # "mean" or "weighted"
-    weights: Optional[List[float]] = None,
+    backend: str = "statevector",    # "statevector" | "sampling"
     seed: int = 42,
+    partitions: Optional[Iterable[Iterable[int]]] = None,
+    method: str = "rdm",             # "subcircuits" | "rdm"
+    agg: str = "mean",               # "mean" | "weighted"
+    weights: Optional[List[float]] = None,
+    entanglement: Optional[str] = None,  # feature-map entanglement
+    **kwargs: Any,
 ) -> Tuple[np.ndarray, Dict[str, Any]]:
+
     """
-    Patch-wise kernel.
+    Patch-wise (local) kernel.
+
+    Computes a kernel by comparing *local patches* of the quantum state per sample,
+    then aggregating patch-wise similarities into a single Gram matrix.
 
     Parameters
     ----------
-    X: np.ndarray (n_samples, d)
-    partitions : iterable of iterables (e.g., [(0,1), (2,3)])
-    method: "subcircuits" | "rdm"
-    agg: "mean" | "weighted"
-    weights: list of floats (same length as number of patches) or None
+    X : np.ndarray (n_samples, d)
+        Input features. `d` is interpreted as the number of qubits/features used by the feature map.
+    feature_map : str
+        Feature map name passed to `get_feature_map_spec` (e.g., "zz_manual", "zz_manual_canonical", "zz_qiskit").
+    depth : int
+        Number of feature-map repetitions (layers).
+    backend : str
+        Backend selector for API consistency. Currently only "statevector" is supported.
+    seed : int
+        Random seed (kept for reproducibility / API consistency).
+    partitions : iterable of iterables of int, optional
+        Patch definition, e.g. [(0,1), (2,3)]. If None, a default partitioning is used.
+    method : {"subcircuits", "rdm"}
+        How to compute patch similarity:
+          - "subcircuits": build per-patch circuits and compare full patch states
+          - "rdm": compute reduced density matrices (RDMs) from the full state
+    agg : {"mean", "weighted"}
+        How to aggregate patch Gram matrices into the final kernel.
+    weights : list[float] or None
+        Patch weights for agg="weighted". Must be non-negative and match number of patches.
+        If agg="mean", this is ignored.
+    entanglement : str or None
+        Entanglement pattern forwarded to the feature map (e.g., "linear", "ring", "full", ...).
+    **kwargs : Any
+        Optional extra options. Example: `rdm_metric="fidelity"` or `rdm_metric="hs"`.
 
     Returns
     -------
-    K: np.ndarray (n, n)
-    meta: dict
+    K : np.ndarray (n, n)
+        Symmetric (approximately PSD) kernel matrix.
+    meta : dict
+        Metadata with configuration used (for logging/reproducibility).
     """
 
     X = np.asarray(X, dtype=float)
     n, d = X.shape
+
+    backend_norm = str(backend).strip().lower()
+    if backend_norm != "statevector":
+        raise NotImplementedError(
+            "local_kernel currently supports backend='statevector' only. "
+            "If you want sampling, implement a shot-based estimator for subcircuits/RDM."
+        )
+
+    # Optional: metric for RDM similarity (kept in kwargs to avoid expanding the core signature)
+    rdm_metric = str(kwargs.pop("rdm_metric", "fidelity")).strip().lower()
+    if rdm_metric not in {"fidelity", "hs"}:
+        raise ValueError("rdm_metric must be 'fidelity' or 'hs'.")
+
 
     Q = d  # number of qubits  
 
@@ -182,8 +231,12 @@ def build_kernel(
             for i in range(m):
                 G[i, i] = 1.0
                 for j in range(i+1, m):
-                    f = state_fidelity(rhos[i], rhos[j], validate=False)
-                    G[i, j] = G[j, i] = float(f)
+                    if rdm_metric == "fidelity":
+                        v = state_fidelity(rhos[i], rhos[j], validate=False)
+                    else:
+                        # Hilbert–Schmidt inner product: Tr(rho_i rho_j)
+                        v = np.trace(rhos[i].data @ rhos[j].data).real
+                    G[i, j] = G[j, i] = float(v)
             grams.append(G)
 
     else:
@@ -200,9 +253,13 @@ def build_kernel(
     off = K.copy(); np.fill_diagonal(off, np.nan)
 
     meta = dict(
+        kernel="local",
+        backend=backend_norm,
+        seed=seed,
         feature_map=feature_map,
         depth=depth,
         entanglement=entanglement,
+        rdm_metric=rdm_metric,
         method=method,
         partitions=parts,
         agg=agg,
