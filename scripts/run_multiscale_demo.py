@@ -281,7 +281,6 @@ if __name__ == "__main__":
 # # Dataset: make_circles (d=2)
 #
 # Baseline (all-qubits only)
-#
 # python -m scripts.run_multiscale_demo --dataset make_circles --n-samples 150 --feature-map zz_qiskit --depth 1 --entanglement linear --scales '[[[0,1]]]' --weights '[1.0]' --out-prefix outputs/multiscale/ms_circles_baseline
 #
 # Local-only (1q patches)

@@ -7,9 +7,7 @@
   "scales": [
     [
       [
-        0
-      ],
-      [
+        0,
         1
       ]
     ]
@@ -22,7 +20,7 @@
   "n_qubits": 2,
   "entanglement": "linear",
   "per_scale_diag_means": [
-    0.7530600589815111
+    0.9999999999999992
   ],
   "center": false,
   "dataset": "make_circles",

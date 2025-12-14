@@ -82,12 +82,22 @@ def _validate_weights(weights: List[float], n_scales: int) -> np.ndarray:
     return w
 
 
-def _statevectors_for_samples(X: np.ndarray, fmap_name: str, depth: int) -> List[Statevector]:
+def _statevectors_for_samples(
+    X: np.ndarray,
+    fmap_name: str,
+    depth: int,
+    entanglement: Optional[str] = None,
+) -> List[Statevector]:
     """
     Build the feature-map circuit for each sample and return its statevector.
     """
     n, d = X.shape
-    spec = get_feature_map_spec(name=fmap_name, depth=depth, num_qubits=d)
+    spec = get_feature_map_spec(
+        name=fmap_name,
+        depth=depth,
+        num_qubits=d,
+        entanglement=entanglement,
+    )
     builder = spec["builder"]
 
     svs: List[Statevector] = []
@@ -214,9 +224,10 @@ def build_kernel(
 
     # Optional normalization toggle (defaults to True)
     normalize: bool = bool(kwargs.pop("normalize", True))
+    entanglement = kwargs.pop("entanglement", None)
 
     # Build statevectors for all samples
-    svs = _statevectors_for_samples(X, fmap_name=feature_map, depth=depth)
+    svs = _statevectors_for_samples(X, fmap_name=feature_map, depth=depth, entanglement=entanglement)
 
     # Per-scale kernels and weighted sum
     K = np.zeros((n, n), dtype=np.float64)
@@ -243,6 +254,7 @@ def build_kernel(
         "normalize": normalize,
         "n_samples": int(n),
         "n_qubits": int(d),
+        "entanglement": entanglement,
         # Optional: per-scale purity (diagonal of Ks) can be informative
         "per_scale_diag_means": [float(np.mean(np.diag(Ks))) for Ks in per_scale_contrib],
     }

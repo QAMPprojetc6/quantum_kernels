@@ -18,19 +18,37 @@
       [
         3
       ]
+    ],
+    [
+      [
+        0,
+        1,
+        2,
+        3
+      ]
     ]
   ],
   "weights": [
-    1.0
+    0.5,
+    0.5
   ],
   "normalize": false,
   "n_samples": 150,
   "n_qubits": 4,
   "entanglement": "ring",
   "per_scale_diag_means": [
-    0.6863997412076547
+    0.6863997412076547,
+    0.9999999999999984
   ],
-  "center": false,
+  "center": true,
+  "spectrum_stats": {
+    "n": 150,
+    "trace": 77.46418065135775,
+    "lambda_min": 3.5105484632576556e-17,
+    "lambda_max": 11.08855951248498,
+    "effective_rank@1e-06": 148,
+    "threshold": 1e-06
+  },
   "dataset": "iris",
   "val_size": 0.2,
   "test_size": 0.2
