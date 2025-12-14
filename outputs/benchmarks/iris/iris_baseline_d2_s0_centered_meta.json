@@ -1,0 +1,28 @@
+{
+  "kernel": "baseline",
+  "feature_map": "zz_manual_canonical",
+  "feature_map_impl": "manual-canonical",
+  "depth": 2,
+  "backend": "statevector",
+  "seed": 0,
+  "num_qubits": 4,
+  "entanglement": "ring",
+  "dataset": "iris",
+  "n_samples": 150,
+  "d": 4,
+  "normalize": false,
+  "center": true,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 150,
+    "trace": 137.41772598488026,
+    "lambda_min": 8.759350925931766e-17,
+    "lambda_max": 6.294876990154924,
+    "effective_rank@1e-06": 148,
+    "threshold": 1e-06
+  }
+}
