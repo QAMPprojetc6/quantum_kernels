@@ -102,7 +102,38 @@ python -m scripts.run_multiscale_demo --dataset iris --feature-map zz_manual_can
 
 ---
 
-## Notes
+# Baseline Kernel (global fidelity) — quick recipes
+
+These commands run the **true baseline** implemented in `scripts/run_baseline_demo.py`
+(i.e., the **global fidelity kernel**), and save outputs under `outputs/baseline/`
+and figures under `figs/baseline/`.
+
+### Dataset: `make_circles`
+```
+python -m scripts.run_baseline_demo --dataset make_circles --n-samples 150 --feature-map zz_qiskit --depth 1 --entanglement linear --out-prefix outputs/baseline/bl_circles_baseline
+```
+
+```
+python -m scripts.run_baseline_demo --dataset make_circles --n-samples 150 --feature-map zz_qiskit --depth 2 --entanglement linear --out-prefix outputs/baseline/bl_circles_baseline_d2 --report-rank
+```
+
+```
+python -m scripts.run_baseline_demo --dataset make_circles --n-samples 150 --feature-map zz_qiskit --depth 1 --entanglement linear --out-prefix outputs/baseline/bl_circles_baseline_centered --center --report-rank
+```
+
+### Dataset: `iris`
+
+```
+python -m scripts.run_baseline_demo --dataset iris --feature-map zz_manual_canonical --depth 1 --entanglement ring --out-prefix outputs/baseline/bl_iris_baseline
+```
+
+```
+python -m scripts.run_baseline_demo --dataset iris --feature-map zz_manual_canonical --depth 1 --entanglement ring --out-prefix outputs/baseline/bl_iris_baseline_centered --center --report-rank
+```
+
+---
+
+# Notes
 
 * Add `--center` to remove the mean component (useful for spectrum analysis).
 * Add `--report-rank` to print & save effective rank and eigenvalue stats.

@@ -1,0 +1,6 @@
+out_prefix,dataset,feature_map,depth,best_C,val_acc,test_acc
+outputs\baseline\bl_circles_baseline,make_circles,zz_qiskit,1,10.0,0.8,0.8333333333333334
+outputs\baseline\bl_circles_baseline_d2,make_circles,zz_qiskit,2,1.0,0.8333333333333334,0.7666666666666667
+outputs\baseline\bl_circles_baseline_centered,make_circles,zz_qiskit,1,10.0,0.8,0.8333333333333334
+outputs\baseline\bl_iris_baseline,iris,zz_manual_canonical,1,1.0,0.8666666666666667,0.8666666666666667
+outputs\baseline\bl_iris_baseline_centered,iris,zz_manual_canonical,1,1.0,0.8666666666666667,0.8666666666666667
