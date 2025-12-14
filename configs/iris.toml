@@ -1,0 +1,85 @@
+# Benchmark config: iris (d=4)
+# Intended runner: python -m scripts.run_experiment --config configs/iris.toml
+
+[run]
+dataset = "iris"
+# iris uses full dataset; n_samples ignored
+seed_grid = [0, 1, 2, 3, 4]
+val_size = 0.2
+test_size = 0.2
+
+[paths]
+out_dir = "outputs/benchmarks/iris"
+figs_dir = "figs/benchmarks/iris"
+
+[feature_map]
+name = "zz_manual_canonical"
+entanglement = "ring"
+depth_grid = [1, 2]
+backend = "statevector"
+
+[post]
+normalize = false
+center_grid = [false, true]
+report_rank = true
+
+[svm]
+C_grid = [0.1, 1.0, 10.0]
+
+# ---------------------------
+# Kernels to run (variants)
+# ---------------------------
+
+[[kernels]]
+name = "baseline"
+enabled = true
+
+# Local-only 1q (RDM)
+[[kernels]]
+name = "local"
+enabled = true
+method = "rdm"
+rdm_metric = "fidelity"
+agg = "mean"
+partitions = [[0], [1], [2], [3]]
+
+# Local-only 2q (pairs)
+[[kernels]]
+name = "local"
+enabled = true
+method = "rdm"
+rdm_metric = "fidelity"
+agg = "mean"
+partitions = [[0, 1], [2, 3]]
+tag = "local2q"   # optional label for naming
+
+# Multi-Scale: local 1q + baseline (all)
+[[kernels]]
+name = "multiscale"
+enabled = true
+normalize = false
+scales = [
+  [[0], [1], [2], [3]],   # local 1q
+  [[0, 1, 2, 3]]          # baseline all-qubits
+]
+weights_grid = [
+  [0.2, 0.8],
+  [0.5, 0.5],
+  [0.8, 0.2]
+]
+tag = "ms_local1q_baseline"
+
+# Multi-Scale: local 2q + baseline (all)
+[[kernels]]
+name = "multiscale"
+enabled = true
+normalize = false
+scales = [
+  [[0, 1], [2, 3]],       # local pairs
+  [[0, 1, 2, 3]]          # baseline all-qubits
+]
+weights_grid = [
+  [0.2, 0.8],
+  [0.6, 0.4]
+]
+tag = "ms_local2q_baseline"

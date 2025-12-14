@@ -191,7 +191,7 @@ Once the team agrees:
 ## Example for the `config.toml` file
 
 ```toml
-# config.toml
+# example.toml
 
 [run]
 seed = 42
