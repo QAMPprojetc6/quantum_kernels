@@ -1,8 +1,9 @@
 """
-Global (fidelity) kernel.
+Baseline (global fidelity) kernel.
 
 Unified API:
     build_kernel(X, feature_map="zz", depth=1, backend="statevector", seed=42, **kwargs)
+
 Returns:
     K: (n, n) ndarray (symmetric, ~PSD)
     meta: dict (config used)
@@ -24,16 +25,13 @@ def build_kernel(
     **kwargs: Any,
 ) -> Tuple[np.ndarray, Dict[str, Any]]:
     """
-    Global fidelity kernel (baseline).
+    Baseline fidelity kernel (global).
 
     Parameters
     ----------
     X : np.ndarray (n_samples, d)
-        Input features; assume preprocessing (scaling) happened upstream.
-    feature_map : str
-    depth : int
     backend : str
-        "statevector" | "sampling" (not yet implemented)
+        "statevector" | "sampling" (sampling not implemented here)
     seed : int
 
     Returns
@@ -42,7 +40,17 @@ def build_kernel(
     meta : dict
     """
 
-    # meta = {...}
+    d = int(X.shape[1])
+    _ = get_feature_map_spec(feature_map, depth, num_qubits=d)  # validate feature map
+
+    meta = {
+        "kernel": "baseline",
+        "feature_map": feature_map,
+        "depth": depth,
+        "backend": backend,
+        "seed": seed,
+        **kwargs,
+    }
 
     raise NotImplementedError("Global kernel not implemented yet. Use this file as a skeleton to add fidelity overlaps.")
     # return K, meta

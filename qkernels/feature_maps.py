@@ -1,8 +1,9 @@
 """
 Shared quantum feature maps.
 
-Two ZZ options are provided:
+ZZ options provided:
   - "zz_manual": a hand-rolled ZZ-style feature map (simple Rx + CZ entanglement).
+  - "zz_manual_canonical": a more canonical-like ZZ map (H + RZ + RZZ interactions).
   - "zz_qiskit": Qiskit's circuit-library `zz_feature_map` function.
 
 API
@@ -25,7 +26,7 @@ Notes
 -----
 - The builder expects a 1D array `params` of length == num_qubits.
 - For depth > 1, both implementations reuse the same feature vector each layer.
-- The manual implementation is ZZ-style but not identical to Qiskit's ZZFeatureMap.
+- The manual implementation is ZZ-style but not identical to Qiskit's `zz_feature_map`.
 """
 
 from typing import Callable, Dict, Optional
@@ -82,7 +83,12 @@ def _zz_manual_builder_factory(
 # -------------------------------
 # Manual ZZ feature map (canonical version)
 # -------------------------------
-def zz_manual_canonical_builder_factory(num_qubits: int, depth: int, entanglement: str, alpha: float = 1.0):
+def zz_manual_canonical_builder_factory(
+    num_qubits: int,
+    depth: int,
+    entanglement: str,
+    alpha: float = 1.0,
+) -> Callable[[np.ndarray], QuantumCircuit]:
     """
     Canonical-like ZZ map:
       - H on all qubits (once)
@@ -99,13 +105,13 @@ def zz_manual_canonical_builder_factory(num_qubits: int, depth: int, entanglemen
         if x.ndim != 1 or x.size != num_qubits:
             raise ValueError(f"x must be 1D with size {num_qubits}.")
         qc = QuantumCircuit(num_qubits)
-        # 1) Hadamards
+        # Hadamards
         qc.h(range(num_qubits))
         for _ in range(depth):
-            # 2) Local Z encodings
+            # Local Z encodings
             for q in range(num_qubits):
                 qc.rz(float(x[q]), q)
-            # 3) ZZ interactions
+            # ZZ interactions
             for q in range(num_qubits - 1):
                 theta = alpha * float(x[q]) * float(x[q + 1])
                 qc.append(RZZGate(theta), [q, q + 1])

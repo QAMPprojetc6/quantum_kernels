@@ -1,12 +1,23 @@
 """
-Evaluate SVM with a precomputed kernel.
+Evaluate an SVM using a precomputed kernel matrix.
+
+We assume an already computed and saved a Gram matrix K where:
+  K[i, j] = k(x_i, x_j)
+
+For scikit-learn's SVC with kernel="precomputed":
+  - fit() expects K_train = K[train_idx, train_idx]
+  - predict() expects K_eval = K[eval_idx, train_idx]
 
 CLI:
     python analysis/eval_svm.py \
-      --kernel outputs/K_local-make_circles_42.npy \
+      --kernel outputs/K_multiscale-make_circles_42.npy \
       --splits outputs/splits_make_circles_42.json \
       --C 0.1 1 10 \
       --out outputs/metrics.csv
+
+Notes:
+- The splits file must refer to the same sample ordering used to build K.
+- Works for binary or multi-class labels (e.g., Iris).
 """
 
 import argparse
@@ -25,6 +36,8 @@ def read_splits(path: str):
     Expected JSON with keys: train_idx, val_idx, test_idx, y_all
     All indices refer to positions in the full dataset used to build K.
     """
+    # All indices refer to row/col positions in the full kernel matrix K.
+    # Keep the dataset ordering fixed across kernels to ensure fair comparison.
     with open(path, "r") as f:
         data = json.load(f)
     return (
