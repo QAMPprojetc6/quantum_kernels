@@ -1,0 +1,64 @@
+# Benchmark config: make_circles (d=2)
+# Intended runner: python -m scripts.run_experiment --config configs/circles.toml
+
+[run]
+dataset = "make_circles"
+n_samples = 150
+seed_grid = [0, 1, 2, 3, 4]
+val_size = 0.2
+test_size = 0.2
+
+# Where to write artifacts
+[paths]
+out_dir = "outputs/benchmarks/circles"
+figs_dir = "figs/benchmarks/circles"
+
+# Shared feature-map settings
+[feature_map]
+name = "zz_qiskit"
+entanglement = "linear"
+depth_grid = [1, 2]
+backend = "statevector"
+
+# Diagnostics / post-processing
+[post]
+normalize = false          # unit-diagonal normalization (optional)
+center_grid = [false, true]
+report_rank = true
+
+# SVM evaluation (precomputed kernels)
+[svm]
+C_grid = [0.1, 1.0, 10.0]
+
+# ---------------------------
+# Kernels to run (variants)
+# ---------------------------
+
+# Baseline (all qubits, global fidelity)
+[[kernels]]
+name = "baseline"
+enabled = true
+
+# Local-only (1q patches) via RDM
+[[kernels]]
+name = "local"
+enabled = true
+method = "rdm"
+rdm_metric = "fidelity"
+agg = "mean"
+partitions = [[0], [1]]
+
+# Multi-Scale: local 1q + baseline (all)
+[[kernels]]
+name = "multiscale"
+enabled = true
+normalize = false
+scales = [
+  [[0], [1]],   # local 1q
+  [[0, 1]]      # baseline all-qubits
+]
+weights_grid = [
+  [0.2, 0.8],
+  [0.5, 0.5],
+  [0.8, 0.2]
+]

@@ -157,7 +157,7 @@ For copy-paste one-liners on `make_circles` and `iris` (Baseline, Local-only, Mu
 ### 6.1 Generate kernels & figures (all enabled kernels in `config.toml`)
 
 ```bash
-python scripts/run_experiment.py --config config.toml
+python scripts/run_experiment.py --config example.toml
 ```
 
 This produces, per kernel & dataset:
