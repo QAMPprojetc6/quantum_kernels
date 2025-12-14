@@ -1,0 +1,28 @@
+{
+  "kernel": "baseline",
+  "feature_map": "zz_qiskit",
+  "feature_map_impl": "qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 3,
+  "num_qubits": 2,
+  "entanglement": "linear",
+  "dataset": "make_circles",
+  "n_samples": 150,
+  "d": 2,
+  "normalize": false,
+  "center": true,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 150,
+    "trace": 111.68187581296013,
+    "lambda_min": -4.591430211617208e-15,
+    "lambda_max": 14.268849611391468,
+    "effective_rank@1e-06": 12,
+    "threshold": 1e-06
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "kernel": "multiscale",
+  "feature_map": "zz_manual_canonical",
+  "depth": 2,
+  "backend": "statevector",
+  "seed": 0,
+  "scales": [
+    [
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        2
+      ],
+      [
+        3
+      ]
+    ],
+    [
+      [
+        0,
+        1,
+        2,
+        3
+      ]
+    ]
+  ],
+  "weights": [
+    0.5,
+    0.5
+  ],
+  "normalize": false,
+  "n_samples": 150,
+  "n_qubits": 4,
+  "entanglement": "ring",
+  "per_scale_diag_means": [
+    0.6663335738721775,
+    0.9999999999999984
+  ],
+  "dataset": "iris",
+  "d": 4,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 150,
+    "trace": 149.99999999999997,
+    "lambda_min": -3.1171506164003365e-16,
+    "lambda_max": 54.025923956449816,
+    "effective_rank@1e-06": 149,
+    "threshold": 1e-06
+  }
+}
