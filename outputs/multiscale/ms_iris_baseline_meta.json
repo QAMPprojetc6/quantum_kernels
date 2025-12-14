@@ -1,16 +1,16 @@
 {
   "kernel": "multiscale",
-  "feature_map": "zz_qiskit",
+  "feature_map": "zz_manual_canonical",
   "depth": 1,
   "backend": "statevector",
   "seed": 42,
   "scales": [
     [
       [
-        0
-      ],
-      [
-        1
+        0,
+        1,
+        2,
+        3
       ]
     ]
   ],
@@ -19,13 +19,13 @@
   ],
   "normalize": false,
   "n_samples": 150,
-  "n_qubits": 2,
-  "entanglement": "linear",
+  "n_qubits": 4,
+  "entanglement": "ring",
   "per_scale_diag_means": [
-    0.7530600589815111
+    0.9999999999999984
   ],
   "center": false,
-  "dataset": "make_circles",
+  "dataset": "iris",
   "val_size": 0.2,
   "test_size": 0.2
 }
