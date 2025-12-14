@@ -1,0 +1,6 @@
+n: 150
+trace: 149.99999999999997
+lambda_min: -1.0634210017199707e-14
+lambda_max: 48.98679440468048
+effective_rank@1e-06: 16
+threshold: 1e-06

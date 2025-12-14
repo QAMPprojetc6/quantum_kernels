@@ -1,0 +1,15 @@
+{
+  "kernel": "baseline",
+  "feature_map": "zz_qiskit",
+  "feature_map_impl": "qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 42,
+  "num_qubits": 2,
+  "entanglement": "linear",
+  "center": false,
+  "dataset": "make_circles",
+  "val_size": 0.2,
+  "test_size": 0.2,
+  "normalize": false
+}

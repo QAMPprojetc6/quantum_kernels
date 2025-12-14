@@ -32,96 +32,28 @@ Example (d=2):
 """
 
 import argparse
-import csv
-import os
 import json
 from pathlib import Path
 import numpy as np
 
 from qkernels.multiscale_kernel import build_kernel
-from analysis.diagnostics import plot_heatmap, plot_offdiag_hist, plot_spectrum
 from analysis.eval_svm import eval_precomputed
 
-
-# ---------------------------
-# data helpers
-# ---------------------------
-def _load_dataset(name: str, n_samples: int, seed: int):
-    from sklearn.datasets import make_circles, load_iris
-    from sklearn.preprocessing import StandardScaler
-
-    rng = np.random.default_rng(seed)
-    if name == "make_circles":
-        X, y = make_circles(n_samples=n_samples, factor=0.5, noise=0.1, random_state=seed)
-    elif name == "iris":
-        iris = load_iris()
-        X, y = iris.data, iris.target
-    else:
-        raise ValueError("dataset must be 'make_circles' or 'iris'.")
-
-    # Shuffle (iris comes ordered)
-    idx = rng.permutation(len(X))
-    X, y = X[idx], y[idx]
-
-    X = X.astype(np.float64)
-    # Standardize features
-    X = StandardScaler().fit_transform(X)
-    # Optional: map to radians for feature maps (simple choice)
-    X = np.pi * X / 2.0
-    return X, y.astype(int)
+from scripts.demo_common import (
+    load_dataset,
+    make_splits,
+    center_kernel,
+    spectrum_stats,
+    prepare_dirs,
+    artifact_paths,
+    save_json,
+    save_splits,
+    write_spectrum_txt,
+    append_metrics_row,
+    plot_all,
+)
 
 
-def _make_splits(n: int, seed: int, val_size: float, test_size: float):
-    # We keep splits deterministic via the seed and store them alongside outputs
-    # so that baseline/local/multi-scale comparisons use identical indices.
-
-    from sklearn.model_selection import train_test_split
-    idx_all = np.arange(n, dtype=int)
-    idx_train, idx_tmp = train_test_split(
-        idx_all,
-        test_size=(val_size + test_size),
-        random_state=seed,
-        shuffle=True,
-        stratify=None,
-    )
-    rel_test = test_size / (val_size + test_size)
-    idx_val, idx_test = train_test_split(
-        idx_tmp,
-        test_size=rel_test,
-        random_state=seed,
-        shuffle=True,
-        stratify=None,
-    )
-    return np.array(idx_train), np.array(idx_val), np.array(idx_test)
-
-
-def _center_kernel(K: np.ndarray) -> np.ndarray:
-    """Double-center the kernel: Kc = H K H."""
-    n = K.shape[0]
-    H = np.eye(n) - np.ones((n, n)) / n
-    Kc = H @ K @ H
-    # enforce exact symmetry
-    Kc = 0.5 * (Kc + Kc.T)
-    return Kc
-
-def _spectrum_stats(K: np.ndarray, thresh: float = 1e-6) -> dict:
-    """Return basic spectrum stats for symmetric K."""
-    Ks = 0.5 * (K + K.T)
-    w = np.linalg.eigvalsh(Ks)
-    eff_rank = int(np.sum(w > thresh))
-    return {
-        "n": int(K.shape[0]),
-        "trace": float(np.sum(w)),
-        "lambda_min": float(w.min()),
-        "lambda_max": float(w.max()),
-        "effective_rank@{:.0e}".format(thresh): eff_rank,
-        "threshold": float(thresh),
-    }
-
-
-# ---------------------------
-# main
-# ---------------------------
 def main():
     ap = argparse.ArgumentParser(description="Run multiscale kernel demo end-to-end.")
     ap.add_argument("--dataset", default="make_circles", choices=["make_circles", "iris"])
@@ -150,9 +82,9 @@ def main():
     args = ap.parse_args()
 
     # data
-    X, y = _load_dataset(args.dataset, args.n_samples, args.seed)
+    X, y = load_dataset(args.dataset, args.n_samples, args.seed)
     n, d = X.shape
-    train_idx, val_idx, test_idx = _make_splits(n, seed=args.seed, val_size=args.val_size, test_size=args.test_size)
+    train_idx, val_idx, test_idx = make_splits(n, seed=args.seed, val_size=args.val_size, test_size=args.test_size)
 
     # kernel
     scales = None  # default: pairs + all (inside multiscale kernel)
@@ -161,6 +93,7 @@ def main():
         scales = json.loads(args.scales)
     if args.weights is not None:
         weights = json.loads(args.weights)
+
     kwargs = {}
     if args.entanglement is not None:
         kwargs["entanglement"] = args.entanglement
@@ -178,37 +111,29 @@ def main():
     )
 
     if args.center:
-        K = _center_kernel(K)
+        K = center_kernel(K)
         meta["center"] = True
     else:
         meta["center"] = False
 
     # spectrum report (optional)
+    stats = None
     if args.report_rank:
-        stats = _spectrum_stats(K, thresh=1e-6)
+        stats = spectrum_stats(K, thresh=1e-6)
         meta["spectrum_stats"] = stats
         print("[SPECTRUM]", stats)
 
     # paths
     out_prefix = Path(args.out_prefix)
-    out_dir = out_prefix.parent if str(out_prefix.parent) != "" else Path(".")
-    figs_dir = Path("figs/multiscale")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    figs_dir.mkdir(parents=True, exist_ok=True)
+    out_dir, figs_dir = prepare_dirs(out_prefix, figs_subdir="figs/multiscale")
+    paths = artifact_paths(out_prefix, figs_dir, centered=bool(args.center))
 
-    if args.report_rank:
-        with open(str(out_prefix) + "_spectrum.txt", "w") as f:
-            for k, v in stats.items():
-                f.write(f"{k}: {v}\n")
-
-    suffix = "_centered" if args.center else ""
-    kpath = str(out_prefix) + f"_K{suffix}.npy"
-    mpath = str(out_prefix) + "_meta.json"
-    spath = str(out_prefix) + "_splits.json"
-    fprefix = str(figs_dir / (out_prefix.name + suffix))
+    if args.report_rank and stats is not None:
+        write_spectrum_txt(paths["spectrum_path"], stats)
 
     # save artifacts
-    np.save(kpath, K)
+    np.save(paths["kpath"], K)
+
     meta_out = dict(meta)
     meta_out.update({
         "dataset": args.dataset,
@@ -220,22 +145,11 @@ def main():
         "test_size": args.test_size,
         "normalize": args.normalize,
     })
-
-    with open(mpath, "w") as f:
-        json.dump(meta_out, f, indent=2)
-
-    with open(spath, "w") as f:
-        json.dump({
-            "train_idx": train_idx.tolist(),
-            "val_idx": val_idx.tolist(),
-            "test_idx": test_idx.tolist(),
-            "y_all": y.tolist(),
-        }, f, indent=2)
+    save_json(paths["mpath"], meta_out)
+    save_splits(paths["spath"], train_idx, val_idx, test_idx, y)
 
     # figures
-    plot_heatmap(K, f"{fprefix}_matrix.png")
-    plot_offdiag_hist(K, f"{fprefix}_offdiag_hist.png")
-    plot_spectrum(K, f"{fprefix}_spectrum.png")
+    plot_all(K, paths["fprefix"])
 
     # metrics (SVM precomputed)
     metrics = eval_precomputed(K, y, train_idx, val_idx, test_idx, args.C)
@@ -252,25 +166,18 @@ def main():
         metrics["val_acc"],
         metrics["test_acc"],
     ]
-
-    write_header = not os.path.exists(metrics_csv)
-    with open(metrics_csv, "a", newline="") as f:
-        w = csv.writer(f)
-        if write_header:
-            w.writerow(header)
-        w.writerow(row)
+    append_metrics_row(metrics_csv, header, row)
 
     print("[OK] Saved:")
-    print("  K:", kpath)
-    print("  meta:", mpath)
-    print("  splits:", spath)
-    print("  figs:", fprefix + "_{matrix,offdiag_hist,spectrum}.png")
+    print("  K:", paths["kpath"])
+    print("  meta:", paths["mpath"])
+    print("  splits:", paths["spath"])
+    print("  figs:", paths["fprefix"] + "_{matrix,offdiag_hist,spectrum}.png")
     print("  metrics row ->", metrics_csv, metrics)
 
 
 if __name__ == "__main__":
     main()
-
 
 
 # ---------------------------
