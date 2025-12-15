@@ -90,7 +90,7 @@ We only compare runs that match **dataset, feature map, depth, entanglement, bac
 
 **Reading:** Baseline shows the strongest concentration signature (off-diags ~0); local-only gives best **test** (0.728), multi-scale is competitive.
 
-![Breast cancer: Baseline vs Local vs Multi-Scale diagnostics](figs/checkpoint2/breast_cancer_compare.png)
+![Breast cancer: Baseline vs Local vs Multi-Scale diagnostics](../../figs/checkpoint2/breast_cancer_compare.png)
 *Breast Cancer (8 qubits): local and multi-scale reduce concentration vs baseline (off-diagonal mass shifts away from 0) and change the spectrum, with competitive SVM performance.*
 
 > *Takeaway*: Local/multi-scale reduce concentration and are competitive; local improves test accuracy vs baseline.
@@ -107,7 +107,7 @@ We only compare runs that match **dataset, feature map, depth, entanglement, bac
 
 **Reading:** No gains in this sweep; best multi-scale collapses to baseline-only, suggests we need different partitions/feature maps/depth or noise model.
 
-![Parkinsons: Baseline vs Local vs Multi-Scale diagnostics](figs/checkpoint2/parkinsons_compare.png)
+![Parkinsons: Baseline vs Local vs Multi-Scale diagnostics](../../figs/checkpoint2/parkinsons_compare.png)
 *Parkinsons (8 qubits): local/multi-scale strongly reduce concentration vs baseline, but this sweep shows no SVM gain, suggesting partitions/feature map/depth need retuning.*
 
 > *Takeaway*: Local/multi-scale reduce concentration, but no SVM gain yet, partitions/feature map/depth need retuning.
