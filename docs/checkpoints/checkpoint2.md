@@ -5,59 +5,42 @@
 
 ## Project overview
 
-Quantum kernels embed classical inputs into quantum states and use state overlap as a similarity score for kernel methods (e.g., SVMs). A major practical issue is **exponential concentration**: as qubit count and/or circuit depth grows, kernel matrices can collapse toward the identity (off-diagonal entries near zero), reducing the kernel’s ability to separate classes.
+Quantum kernels embed classical inputs into quantum states and use **state overlap** as a similarity score for kernel methods (e.g., SVMs). A key limitation is **exponential concentration**: as qubit count and/or circuit depth grows, kernel matrices can drift toward the identity (off-diagonals near zero), reducing separability.
 
-Our goal is to implement and evaluate two mitigation strategies:
+We implement and benchmark two mitigation strategies:
 
 * **Local (patch-wise) kernels:** compute similarity on **subsystems** (patches) via reduced density matrices (RDMs), then aggregate across patches.
-* **Multi-Scale kernels:** compute kernels at multiple granularities (local + global), then combine them via a **non-negative weighted mix**.
-
-We aim to deliver reproducible Qiskit implementations, diagnostic plots (histograms/spectra), and benchmarking results on small datasets (starting with `make_circles` and `iris`).
+* **Multi-Scale kernels:** compute kernels at multiple granularities (local + global) and combine them via a **non-negative weighted mix**.
 
 ----
 
 ## Progress made 
 
-We built an end-to-end, reproducible benchmarking pipeline:
+We built a reproducible, end-to-end benchmarking pipeline:
 
-* Implemented **baseline**, **local**, and **multi-scale** kernel modules with a shared "unified API".
-* Added scripts to run benchmarks from TOML configs:
+* Implemented **baseline**, **local**, and **multi-scale** kernels under a shared unified API.
+* TOML-driven runner: `scripts/run_experiment.py` + multi-config orchestrator: `scripts/run_all_benchmarks.py`.
+* Diagnostics + evaluation:
 
-  * `scripts/run_experiment.py` (full benchmark runner)
-  * `scripts/run_all_benchmarks.py` (runs multiple configs + per-dataset summary + global summary)
-* Added diagnostics and evaluation:
-
-  * `analysis/diagnostics.py`: kernel heatmap, off-diagonal histogram, eigen-spectrum
-  * `analysis/eval_svm.py`: SVM evaluation with precomputed kernels (C sweep)
-  * `analysis/summarize_benchmarks.py`: aggregate results into `summary.csv/.md`
-* Ensured cross-platform usability (CLI + IDE) via path normalization and stable output resolution.
-* Established “recipes” for quick reproduction and ablation-style comparisons (`docs/RECIPES.md`).
-
-We can now run large sweeps automatically and summarize outcomes for reporting.
+  * `analysis/diagnostics.py`: heatmap, off-diagonal histogram, eigen-spectrum
+  * `analysis/eval_svm.py`: SVM with precomputed kernels (C sweep)
+  * `analysis/summarize_benchmarks.py`: aggregates runs into per-dataset and global summaries
+* "Recipes" for quick reproducibility/ablations: `docs/RECIPES.md`.
+* Cross-platform stability (CLI + IDE) with consistent run IDs for joining artifacts + metrics.
 
 ----
 
 ## Explorations and experiments
 
-We ran systematic sweeps over:
+We ran systematic sweeps on 4 datasets:
 
-* **Datasets:** `make_circles` (d=2) and `iris` (d=4)
-* **Feature maps:** `zz_qiskit` and `zz_manual_canonical`
-* **Depth:** 1 and 2 (early stage)
-* **Kernel variants:**
+* `make_circles` (d=2), `iris` (d=4), `breast_cancer` (PCA to d=8), `parkinsons` (PCA to d=8)
+* Feature maps: `zz_qiskit`, `zz_manual_canonical`; depth: 1-2
+* Kernels: baseline, local-only, multi-scale (local + baseline; weight grids)
 
-  * Baseline (all-qubits overlap)
-  * Local-only (1q or 2q patches via RDMs)
-  * Multi-Scale (local + baseline mixed; weight grids)
 
-**What worked**
+**Overall pattern so far:** local/multi-scale reduce concentration (off-diagonals shift away from ~0), but accuracy gains are dataset-dependent; weight grids can overfit validation.
 
-* Local and multi-scale kernels **consistently reduced concentration** in the diagnostics: off-diagonal similarities shifted away from 0, and kernels showed richer structure than the baseline in many settings.
-* On `iris` (with `zz_manual_canonical`), **multi-scale improved centered alignment** relative to baseline at depth 1 and remained competitive at depth 2.
-
-**What did not (yet) work**
-
-* On `make_circles`, baseline often remained best in SVM performance and alignment, while local-only kernels sometimes produced overly "flat/high-similarity" kernels (many off-diagonals large), which did not translate into better alignment or SVM results.
 
 ----
 
@@ -65,96 +48,96 @@ We ran systematic sweeps over:
 
 ### Equivalent comparisons
 
-To make comparisons meaningful, we compare runs that share:
+We only compare runs that match **dataset, feature map, depth, entanglement, backend, and preprocessing (normalize/center)**.
 
-* dataset, feature map, depth, entanglement, backend, centering/normalization settings, and (ideally) the same split seed.
-
-Below are median (and best) diagnostic summaries for representative matched blocks (uncentered kernels). These focus on concentration mitigation **and** “learnability signal” via centered alignment.
+**Centering:** we report uncentered results for concentration interpretability; learning metrics are compared within the same centered/uncentered grouping.
 
 ---
 
-**Note on centering:** We group results by whether kernels are centered ($K_c = HKH$) because centering changes the interpretation of kernel entries and can introduce negative values. In this report, we present **uncentered** matched comparisons because they are the most interpretable for **concentration diagnostics** (off-diagonals collapsing toward 0). We still evaluate **learning performance** (alignment/SVM) separately under the same centered/uncentered grouping in our benchmark summaries.
+### Best matched results per dataset (uncentered)
 
-### Matched comparisons (uncentered)
+### `make_circles (n=150, d=2)` : `zz_qiskit`, depth=2, ent=linear, centered=False
 
-### `make_circles` : `zz_qiskit`, depth = 1, entanglement = linear
+| Kernel     | Scales / Patches |    Weights | OffDiag μ±σ | EffRank | Align |   Val |  Test |
+| ---------- | ---------------- |-----------:| ----------: | ------: | ----: | ----: | ----: |
+| baseline   | all qubits       |          - | 0.306±0.227 |    10.1 | 0.109 | 0.800 | 0.600 |
+| local      | 1q×2             |          - | 0.616±0.177 |     3.8 | 0.015 | 0.633 | 0.433 |
+| multiscale | 1q×2 + 2q×1      | [0.8, 0.2] | 0.547±0.184 |     5.3 | 0.049 | 0.800 | 0.667 |
 
-| Kernel                        | off-diag mean | off-diag p50 | alignment (median) | alignment (best) |
-| ----------------------------- | ------------: | -----------: | -----------------: | ---------------: |
-| baseline                      |         0.250 |        0.191 |              0.081 |            0.107 |
-| local (1q)                    |         0.681 |        0.692 |              0.022 |            0.042 |
-| multiscale (local1q+baseline) |         0.428 |        0.395 |              0.065 |            0.100 |
-
-**Reading:** Local and Multi-Scale clearly push off-diagonals away from zero (less concentration). However, baseline still has stronger median/best alignment than local-only, and multi-scale is close but not consistently above baseline.
+**Reading:** Multi-scale improves **test** vs baseline (0.667 vs 0.600); local-only becomes too low-rank and underperforms.
 
 ---
 
-### `make_circles` : `zz_qiskit`, depth = 2, entanglement = linear
+### `iris (n=150, d=4)` : `zz_manual_canonical`, depth=1, ent=ring, centered=False
 
-| Kernel                        | off-diag mean | off-diag p50 | alignment (median) | alignment (best) |
-| ----------------------------- | ------------: | -----------: | -----------------: | ---------------: |
-| baseline                      |         0.306 |        0.264 |              0.082 |            0.109 |
-| local (1q)                    |         0.617 |        0.624 |              0.013 |            0.021 |
-| multiscale (local1q+baseline) |         0.449 |        0.419 |              0.057 |            0.099 |
+| Kernel     | Scales / Patches |    Weights | OffDiag μ±σ | EffRank | Align |   Val |  Test |
+| ---------- | ---------------- |-----------:| ----------: | ------: | ----: | ----: | ----: |
+| baseline   | all qubits       |          - | 0.116±0.162 |    40.8 | 0.391 | 0.933 | 0.933 |
+| local      | 1q×4             |          - | 0.803±0.119 |     2.3 | 0.444 | 0.867 | 0.700 |
+| multiscale | 1q×4 + 4q×1      | [0.8, 0.2] | 0.602±0.104 |     7.6 | 0.456 | 0.967 | 0.833 |
 
-**Reading:** Same pattern: reduced concentration for local/multi-scale, but baseline remains strongest in alignment; local-only is worst.
-
----
-
-### `iris` : `zz_manual_canonical`, depth = 1, entanglement = ring
-
-| Kernel                        | off-diag mean | off-diag p50 | alignment (median) | alignment (best) |
-| ----------------------------- | ------------: | -----------: | -----------------: | ---------------: |
-| baseline                      |         0.116 |        0.057 |              0.391 |            0.391 |
-| local (1q)                    |         0.641 |        0.641 |              0.414 |            0.444 |
-| multiscale (local1q+baseline) |         0.283 |        0.252 |              0.414 |        **0.456** |
-
-**Reading:** Baseline shows much smaller off-diagonals (more concentrated). Local and Multi-Scale increase off-diagonal structure. Importantly, **Multi-Scale improves best alignment** beyond baseline, suggesting that reduced concentration can translate into a more useful kernel for learning on Iris.
+**Reading:** Baseline is best on **test**; multi-scale wins on **val** (possible weight overfitting), while local-only is overly uniform/low-rank.
 
 ---
 
-### `iris` : `zz_manual_canonical`, depth = 2, entanglement = ring
+### `breast_cancer (n=569, d=8)` : `zz_manual_canonical`, depth=1, ent=ring, centered=False
 
-| Kernel                        | off-diag mean | off-diag p50 | alignment (median) | alignment (best) |
-| ----------------------------- | ------------: | -----------: | -----------------: | ---------------: |
-| baseline                      |         0.078 |        0.047 |              0.169 |            0.169 |
-| local (1q)                    |         0.643 |        0.646 |              0.147 |            0.157 |
-| multiscale (local1q+baseline) |         0.250 |        0.240 |              0.172 |        **0.179** |
+| Kernel     | Scales / Patches |    Weights | OffDiag μ±σ | EffRank | Align |   Val |  Test |
+| ---------- | ---------------- |-----------:| ----------: | ------: | ----: | ----: | ----: |
+| baseline   | all qubits       |          - | 0.012±0.030 |   475.8 | 0.073 | 0.781 | 0.675 |
+| local      | 2q×4             |          - | 0.312±0.091 |    75.0 | 0.090 | 0.754 | 0.728 |
+| multiscale | 2q×4 + 8q×1      | [0.5, 0.5] | 0.193±0.060 |   184.7 | 0.094 | 0.807 | 0.719 |
 
-**Reading:** Multi-Scale remains slightly better than baseline in alignment; local-only degrades. This hints that mixing local and global information can be more stable than local-only as depth increases.
+**Reading:** Baseline shows the strongest concentration signature (off-diags ~0); local-only gives best **test** (0.728), multi-scale is competitive.
+
+![Breast cancer: Baseline vs Local vs Multi-Scale diagnostics](figs/checkpoint2/breast_cancer_compare.png)
+*Breast Cancer (8 qubits): local and multi-scale reduce concentration vs baseline (off-diagonal mass shifts away from 0) and change the spectrum, with competitive SVM performance.*
+
+> *Takeaway*: Local/multi-scale reduce concentration and are competitive; local improves test accuracy vs baseline.
+
+---
+
+### `parkinsons (n=195, d=8)` : `zz_qiskit`, depth=1, ent=linear, centered=False
+
+| Kernel     | Scales / Patches |    Weights | OffDiag μ±σ | EffRank | Align |   Val |  Test |
+| ---------- | ---------------- |-----------:| ----------: | ------: | ----: | ----: | ----: |
+| baseline   | all qubits       |          - | 0.004±0.008 |   193.6 | 0.072 | 0.769 | 0.795 |
+| local      | 2q×4             |          - | 0.250±0.064 |    63.2 | 0.046 | 0.769 | 0.795 |
+| multiscale | 2q×4 + 8q×1      | [0.0, 1.0] | 0.004±0.008 |   193.6 | 0.072 | 0.769 | 0.795 |
+
+**Reading:** No gains in this sweep; best multi-scale collapses to baseline-only, suggests we need different partitions/feature maps/depth or noise model.
+
+![Parkinsons: Baseline vs Local vs Multi-Scale diagnostics](figs/checkpoint2/parkinsons_compare.png)
+*Parkinsons (8 qubits): local/multi-scale strongly reduce concentration vs baseline, but this sweep shows no SVM gain, suggesting partitions/feature map/depth need retuning.*
+
+> *Takeaway*: Local/multi-scale reduce concentration, but no SVM gain yet, partitions/feature map/depth need retuning.
 
 ----
 
 ### Technical challenges
 
-* **Path/cwd differences (CLI vs IDE):** running from IDE used a different working directory and initially wrote outputs under `scripts/`. We fixed this by resolving config/output paths relative to the repo root.
-* **Windows encoding issue (CSV):** writing Greek symbols (e.g., `λ_min`) failed on cp1252. We fixed CSV writing by explicitly using UTF-8.
-* **Metrics join mismatch:** summaries initially showed many empty fields because `metrics.csv` used Windows path formatting while artifact-derived paths used POSIX formatting. We fixed the join by normalizing run identifiers (stable join keys).
-* **Kernel comparability:** Centering ($K_c = HKH$) changes the meaning of kernel entries (and may yield negative values), so we report diagnostics and performance **separately for centered vs uncentered** runs. In the main text we show uncentered tables for concentration; centered results are tracked in the benchmark summaries for learning metrics.
----
+* **Reproducible runs across setups:** CLI vs IDE changed the working directory and broke relative paths. We fixed this by resolving configs/outputs relative to the repo root.
+* **Reliable aggregation at scale:** Large sweeps (seeds × depths × weights) exposed fragile joins between artifacts and `metrics.csv`. We introduced **stable run IDs** and normalized paths so summaries are complete.
+* **Platform quirks:** Windows default encoding broke CSV export when using symbols (e.g., λ). We standardized all summaries to **UTF-8**.
+* **Numerical stability:** Centering and floating-point noise can yield small negative eigenvalues. We standardized symmetrization and allow light diagonal regularization for stable SVM training.
+
+
+----
 
 ### Current status
 
-* All three kernel families (baseline/local/multi-scale) run end-to-end via TOML-configured benchmarks.
-* We can generate diagnostics, SVM metrics, per-dataset summaries, and a global summary across all runs.
-* Empirically:
+* All three kernel families (baseline/local/multi-scale) run end-to-end via TOML configs on **4 datasets**, producing diagnostics, SVM metrics, per-dataset summaries, and a global summary.
+* Empirically, **concentration mitigation is visible** (off-diagonal statistics shift away from ~0), but **accuracy benefits are not universal**: strongest improvements so far appear on `breast_cancer` (local/multi-scale competitive), while `parkinsons` shows no improvement yet.
 
-  * **Concentration mitigation** is visible in local and multi-scale kernels (especially in off-diagonal distributions).
-  * **Learning signal improvements** appear most clearly in `iris` via multi-scale alignment gains.
-  * On `make_circles`, baseline is still strongest in many sweeps; multi-scale is competitive but not consistently better yet.
-
+----
 
 ### Path forward
 
-1. **More ablations:** for each dataset and fixed feature map/depth, run:
-   * baseline-only, local-only, multi-scale (local+baseline), with fixed splits/seeds.
-2. **Weight tuning strategy:** select multi-scale weights using validation (or alignment proxy) rather than reporting raw grid extremes; report test once per selected model.
-3. **Patch design improvements:** for Iris and upcoming higher-d feature sets, evaluate patch sizes (1q vs 2q vs 3q) and structured partitions (pairs/triplets) to avoid overly uniform "local-only" kernels.
-4. **Scale up beyond toy:** add one additional small real-world tabular dataset with 20–30 features (as suggested in the program guide) to probe concentration more realistically.
-5. **Robustness checks (lightweight):** optional input noise or shallow sampling noise to test stability trends.
-6. **Writing cadence:** maintain a running methods/results log; for the MVP report, include:
 
-   * one clear dataset where multi-scale or local is better (accuracy and/or robustness),
-   * diagnostics (histogram + spectrum) that explain *why*.
+1. **Tight ablations per dataset:** baseline-only vs local-only vs multi-scale under fixed splits/seeds, then report a single selected model per setting.
+2. **Weight selection protocol:** choose multi-scale weights via validation (and confirm once on test) to reduce "grid extreme" reporting.
+3. **Partition design:** try structured patches (1q/2q/3q, overlapping vs disjoint) to avoid overly uniform local kernels.
+4. **Probe concentration more directly:** increase qubits/features gradually (e.g., d=8 -> 12 where feasible) and test depth sensitivity.
+5. **Robustness check:** light input noise or sampling noise to test stability trends.
 
-**MVP target:** demonstrate at least one dataset where Local or Multi-Scale kernels show a clear advantage (performance or robustness) over the baseline, supported by diagnostic evidence of reduced concentration and improved kernel structure.
+**MVP target:** one dataset where local or multi-scale shows a clear advantage (accuracy and/or robustness), supported by diagnostics explaining reduced concentration and improved kernel structure.
