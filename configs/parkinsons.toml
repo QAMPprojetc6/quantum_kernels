@@ -1,0 +1,52 @@
+[run]
+dataset = "parkinsons"
+n_samples = 0                 # ignored for this dataset
+n_features = 8                # start small; parkinsons has many voice features
+pca = true
+seed_grid = [42, 43, 44]
+val_size = 0.2
+test_size = 0.2
+
+[feature_map]
+name = "zz_qiskit"
+depth_grid = [1, 2]
+entanglement = "linear"
+backend = "statevector"
+shots = 0
+
+[paths]
+out_dir = "outputs/benchmarks/parkinsons"
+figs_dir = "figs/benchmarks/parkinsons"
+
+[[kernels]]
+name = "baseline"
+enabled = true
+normalize = true
+
+[[kernels]]
+name = "local"
+enabled = true
+method = "rdm"
+rdm_metric = "hs"
+agg = "mean"
+partitions = [[0,1],[2,3],[4,5],[6,7]]
+normalize = true
+
+[[kernels]]
+name = "multiscale"
+enabled = true
+normalize = true
+scales = [
+  [[0,1],[2,3],[4,5],[6,7]],
+  [[0,1,2,3,4,5,6,7]]
+]
+weights_grid = [
+  [1.0, 0.0],
+  [0.7, 0.3],
+  [0.5, 0.5],
+  [0.3, 0.7],
+  [0.0, 1.0]
+]
+
+[svm]
+C = [0.1, 1.0, 10.0]

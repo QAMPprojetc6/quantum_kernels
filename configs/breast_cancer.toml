@@ -1,0 +1,53 @@
+[run]
+dataset = "breast_cancer"
+n_samples = 0                 # ignored for this dataset
+n_features = 8                # reduce to 8 qubits first (adjust later)
+pca = true
+seed_grid = [42, 43, 44]
+val_size = 0.2
+test_size = 0.2
+
+[feature_map]
+name = "zz_manual_canonical"
+depth_grid = [1, 2]
+entanglement = "ring"
+backend = "statevector"       # if too slow, switch to "sampling"
+shots = 0
+
+[paths]
+out_dir = "outputs/benchmarks/breast_cancer"
+figs_dir = "figs/benchmarks/breast_cancer"
+
+# ---- Kernels to run ----
+[[kernels]]
+name = "baseline"
+enabled = true
+normalize = true
+
+[[kernels]]
+name = "local"
+enabled = true
+method = "rdm"
+rdm_metric = "hs"
+agg = "mean"
+partitions = [[0,1],[2,3],[4,5],[6,7]]
+normalize = true
+
+[[kernels]]
+name = "multiscale"
+enabled = true
+normalize = true
+scales = [
+  [[0,1],[2,3],[4,5],[6,7]],  # local 2q patches
+  [[0,1,2,3,4,5,6,7]]         # baseline (all qubits)
+]
+weights_grid = [
+  [1.0, 0.0],
+  [0.7, 0.3],
+  [0.5, 0.5],
+  [0.3, 0.7],
+  [0.0, 1.0]
+]
+
+[svm]
+C = [0.1, 1.0, 10.0]

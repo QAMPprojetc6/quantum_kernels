@@ -23,6 +23,8 @@ from typing import List
 DEFAULT_CONFIGS = [
     "configs/circles.toml",
     "configs/iris.toml",
+    "configs/breast_cancer.toml",
+    "configs/parkinsons.toml",
 ]
 
 
@@ -127,6 +129,7 @@ if __name__ == "__main__":
 # Run:
 #
 # python -m scripts.run_all_benchmarks --configs configs/circles.toml configs/iris.toml
+# python -m scripts.run_all_benchmarks --configs configs/breast_cancer.toml configs/parkinsons.toml
 #
 # or
 #
