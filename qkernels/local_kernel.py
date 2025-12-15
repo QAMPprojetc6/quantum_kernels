@@ -223,9 +223,14 @@ def build_kernel(
             traced_out = [q for q in range(Q) if q not in P]
             rhos = []
             for sv in full_states:
-                rho_full = DensityMatrix(sv)
-                rhoP = partial_trace(rho_full, traced_out)
+                # Avoid building the full density matrix (2^d x 2^d). For larger d, Qiskit's
+                # partial_trace on DensityMatrix can fail (einsum index explosion) and is much heavier.
+                if len(traced_out) == 0:
+                    rhoP = DensityMatrix(sv)  # full system (no reduction)
+                else:
+                    rhoP = partial_trace(sv, traced_out)  # trace directly from Statevector
                 rhos.append(rhoP)
+
             m = len(rhos)
             G = np.empty((m, m), float)
             for i in range(m):

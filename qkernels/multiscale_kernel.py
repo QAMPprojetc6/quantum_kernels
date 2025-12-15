@@ -108,17 +108,15 @@ def _statevectors_for_samples(
     return svs
 
 
-def _rdm_for_patch(rho_full: DensityMatrix, d: int, patch: Tuple[int, ...]) -> DensityMatrix:
+def _rdm_for_patch(sv: Statevector, d: int, patch: Tuple[int, ...]) -> DensityMatrix:
     """
-    Compute the reduced density matrix on a given patch by tracing out the complement.
-    Qubit indices follow the circuit's ordering (0..d-1).
+    Compute the reduced density matrix (RDM) on a given patch by tracing out the complement.
+    IMPORTANT: we trace starting from the Statevector to avoid materializing the full 2^d x 2^d density matrix.
     """
     all_idx = set(range(d))
     trace_out = sorted(all_idx - set(patch))
-    if len(trace_out) == 0:
-        # No reduction needed; return the full DM
-        return rho_full
-    return partial_trace(rho_full, trace_out)
+    # partial_trace(Statevector, trace_out) returns a (small) DensityMatrix on the kept subsystem
+    return partial_trace(sv, trace_out)
 
 
 def _hs_inner(A: DensityMatrix, B: DensityMatrix) -> float:
@@ -134,28 +132,37 @@ def _per_scale_kernel(
     patches: List[Tuple[int, ...]],
 ) -> np.ndarray:
     """
-    Build K^(s) for one scale by averaging HS inner products of patch RDMs.
+    Build K^(s) for one scale by averaging, per patch:
+      - If patch is the full system: fidelity = |<psi_i|psi_j>|^2  (no density matrix materialization)
+      - Otherwise: HS inner product of patch RDMs Tr(rho_i^p rho_j^p)
     """
     n = len(svs)
-    # Precompute full density matrices once per sample
-    rhos_full = [DensityMatrix(sv) for sv in svs]
-    # Precompute RDMs per patch & sample: rdm[p][i] = rho_i^patch
-    rdm_per_patch: List[List[DensityMatrix]] = []
-    for patch in patches:
-        rdms = [ _rdm_for_patch(rhos_full[i], d, patch) for i in range(n) ]
-        rdm_per_patch.append(rdms)
-
-    # Compute per-scale kernel matrix
     Ks = np.zeros((n, n), dtype=np.float64)
     inv_m = 1.0 / float(len(patches))
-    for a in range(n):
-        # Diagonal block faster
-        for b in range(a, n):
-            acc = 0.0
-            for p_idx in range(len(patches)):
-                acc += _hs_inner(rdm_per_patch[p_idx][a], rdm_per_patch[p_idx][b])
-            val = acc * inv_m
-            Ks[a, b] = Ks[b, a] = val
+
+    # Accumulate per-patch contributions
+    for patch in patches:
+        if len(patch) == d:
+            # Full-system patch: HS(pure,pure) == fidelity
+            for a in range(n):
+                va = svs[a].data
+                for b in range(a, n):
+                    vb = svs[b].data
+                    fid = float(np.abs(np.vdot(va, vb)) ** 2)
+                    Ks[a, b] += fid
+                    if b != a:
+                        Ks[b, a] += fid
+        else:
+            # Local patch: compute small RDMs via partial_trace(Statevector, trace_out)
+            rdms = [_rdm_for_patch(svs[i], d, patch) for i in range(n)]
+            for a in range(n):
+                for b in range(a, n):
+                    hs = _hs_inner(rdms[a], rdms[b])
+                    Ks[a, b] += hs
+                    if b != a:
+                        Ks[b, a] += hs
+
+    Ks *= inv_m
     return Ks
 
 
