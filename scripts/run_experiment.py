@@ -345,8 +345,12 @@ def main() -> None:
 
     # read config
     run_cfg = cfg.get("run", {})
+
     dataset = str(run_cfg.get("dataset", "make_circles")).strip()
     n_samples = int(run_cfg.get("n_samples", 150))
+    n_features = run_cfg.get("n_features", None)  # optional
+    use_pca = bool(run_cfg.get("pca", False))  # optional
+
     seed_grid = list(run_cfg.get("seed_grid", [42]))
     val_size = float(run_cfg.get("val_size", 0.2))
     test_size = float(run_cfg.get("test_size", 0.2))
@@ -391,7 +395,13 @@ def main() -> None:
     # sweep
     for seed in seed_grid:
         # Load dataset once per seed (matches demo behavior)
-        X, y = load_dataset(dataset, n_samples=n_samples, seed=int(seed))
+        X, y = load_dataset(
+            dataset,
+            n_samples=n_samples,
+            seed=int(seed),
+            n_features=None if n_features is None else int(n_features),
+            pca=use_pca,
+        )
         train_idx, val_idx, test_idx = make_splits(len(X), seed=int(seed), val_size=val_size, test_size=test_size)
 
         for depth in depth_grid:
