@@ -1,0 +1,67 @@
+{
+  "kernel": "multiscale",
+  "feature_map": "zz_manual_canonical",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 43,
+  "scales": [
+    [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        6,
+        7
+      ]
+    ],
+    [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    ]
+  ],
+  "weights": [
+    0.5,
+    0.5
+  ],
+  "normalize": true,
+  "n_samples": 569,
+  "n_qubits": 8,
+  "entanglement": "ring",
+  "per_scale_diag_means": [
+    0.6747668354352461,
+    0.9999999999999972
+  ],
+  "dataset": "breast_cancer",
+  "d": 8,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 569,
+    "trace": 569.0000000000001,
+    "lambda_min": 0.025426879565094283,
+    "lambda_max": 112.56302293195306,
+    "effective_rank@1e-06": 569,
+    "threshold": 1e-06
+  }
+}

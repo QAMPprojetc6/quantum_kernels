@@ -1,0 +1,67 @@
+{
+  "kernel": "multiscale",
+  "feature_map": "zz_qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 43,
+  "scales": [
+    [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        6,
+        7
+      ]
+    ],
+    [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    ]
+  ],
+  "weights": [
+    0.5,
+    0.5
+  ],
+  "normalize": true,
+  "n_samples": 195,
+  "n_qubits": 8,
+  "entanglement": "linear",
+  "per_scale_diag_means": [
+    0.6464014034709616,
+    0.9999999999999973
+  ],
+  "dataset": "parkinsons",
+  "d": 8,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 195,
+    "trace": 195.00000000000003,
+    "lambda_min": 0.40520361717267167,
+    "lambda_max": 31.021915551713384,
+    "effective_rank@1e-06": 195,
+    "threshold": 1e-06
+  }
+}

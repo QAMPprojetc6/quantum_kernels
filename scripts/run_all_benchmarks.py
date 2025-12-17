@@ -79,11 +79,11 @@ def main() -> None:
 
     configs = args.configs if args.configs and len(args.configs) > 0 else DEFAULT_CONFIGS
 
-    # 1) Run benchmarks for each config
+    # Run benchmarks for each config
     for cfg in configs:
         _run_module("scripts.run_experiment", ["--config", cfg])
 
-    # 2) Summarize each dataset output root + also create a global summary
+    # Summarize each dataset output root + also create a global summary
     if not args.skip_summary:
         roots: List[Path] = []
         for cfg in configs:
@@ -101,7 +101,6 @@ def main() -> None:
         # just point summarize_benchmarks at outputs/benchmarks, since it will scan recursively.
         # global_root = Path("outputs/benchmarks")
         repo_root = Path(__file__).resolve().parents[1]
-        global_root = repo_root / "outputs" / "benchmarks"
 
         repo_root = Path(__file__).resolve().parents[1]
 
@@ -113,7 +112,10 @@ def main() -> None:
         if global_out_md is not None and not global_out_md.is_absolute():
             global_out_md = (repo_root / global_out_md).resolve()
 
-        global_args = ["--root", str(global_root), "--out", str(global_out_csv)]
+        #global_root = repo_root / "outputs" / "benchmarks"
+        #global_args = ["--root", str(global_root), "--out", str(global_out_csv)]
+        global_args = ["--roots", *[str(p) for p in roots], "--out", str(global_out_csv)]
+
         if global_out_md is not None:
             global_args += ["--md", str(global_out_md)]
 
@@ -130,6 +132,7 @@ if __name__ == "__main__":
 #
 # python -m scripts.run_all_benchmarks --configs configs/circles.toml configs/iris.toml
 # python -m scripts.run_all_benchmarks --configs configs/breast_cancer.toml configs/parkinsons.toml
+# python -m scripts.run_all_benchmarks --configs configs/breast_cancer_d4.toml configs/breast_cancer_d6.toml configs/breast_cancer_d8.toml configs/breast_cancer_d10.toml configs/breast_cancer_d12.toml configs/breast_cancer_d14.toml configs/breast_cancer_d16.toml configs/breast_cancer_d18.toml configs/breast_cancer_d20.toml configs/parkinsons_d4.toml configs/parkinsons_d6.toml configs/parkinsons_d8.toml configs/parkinsons_d10.toml configs/parkinsons_d12.toml configs/parkinsons_d14.toml configs/parkinsons_d16.toml configs/parkinsons_d18.toml configs/parkinsons_d20.toml
 #
 # or
 #
