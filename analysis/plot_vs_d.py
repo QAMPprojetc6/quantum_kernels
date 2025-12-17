@@ -36,6 +36,25 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 
+# Color/marker styles
+# - Distinct markers + line styles so plots remain readable even in grayscale.
+# - Palette based on Okabe–Ito (high contrast), plus different linestyles.
+STYLE_MAP = {
+    "baseline":   dict(color="#000000", marker="o", linestyle="-",  markerfacecolor="#000000", markeredgecolor="#000000"),
+    "local":      dict(color="#E69F00", marker="s", linestyle="--", markerfacecolor="none",     markeredgecolor="#E69F00"),
+    "multiscale": dict(color="#56B4E9", marker="^", linestyle="-.", markerfacecolor="none",     markeredgecolor="#56B4E9"),
+}
+PLOT_ORDER = ["baseline", "local", "multiscale"]
+
+def _style_for_series(name: str) -> dict:
+    """Resolve style for a series name (robust to name decorations)."""
+    key = name.strip().lower()
+    for k in STYLE_MAP:
+        if key == k or key.startswith(k):
+            return STYLE_MAP[k].copy()
+    # Fallback: still use distinct marker/linestyle
+    return dict(marker="D", linestyle=":", markerfacecolor="none")
+
 
 # -----------------------------
 # Parsing helpers
@@ -305,30 +324,49 @@ def _plot_lines(
     ylabel: str,
     out_path: Path,
 ):
-    plt.figure()
-    for name, by_d in series.items():
-        ys = []
-        yerr = []
+    plt.figure(figsize=(8, 6))
+
+    names = [n for n in PLOT_ORDER if n in series] + [n for n in series.keys() if n not in PLOT_ORDER]
+
+    for name in names:
+        by_d = series[name]
+
+        ys: List[Optional[float]] = []
+        yerr: List[Optional[float]] = []
         for d in xs:
             m, s = by_d.get(d, (None, None))
             ys.append(m)
             yerr.append(s)
+
         # plot only where we have values
         xs_plot = [x for x, y in zip(xs, ys) if y is not None]
         ys_plot = [y for y in ys if y is not None]
         if not xs_plot:
             continue
 
-        # error bars if available
         yerr_plot = [e for y, e in zip(ys, yerr) if y is not None]
-        plt.errorbar(xs_plot, ys_plot, yerr=yerr_plot, marker="o", capsize=3, label=name)
+
+        style = _style_for_series(name)
+        plt.errorbar(
+            xs_plot,
+            ys_plot,
+            yerr=yerr_plot,
+            label=name,
+            linewidth=2.2,
+            markersize=7,
+            markeredgewidth=1.6,
+            capsize=3,
+            capthick=1.4,
+            elinewidth=1.4,
+            **style,
+        )
 
     plt.title(title)
     plt.xlabel("d (qubits)")
     plt.ylabel(ylabel)
     plt.xticks(xs)
-    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
-    plt.legend()
+    plt.grid(True, which="both", linestyle="--", linewidth=0.8, alpha=0.6)
+    plt.legend(frameon=True)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     plt.tight_layout()
     plt.savefig(out_path, dpi=200)
