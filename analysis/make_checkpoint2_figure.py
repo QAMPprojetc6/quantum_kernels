@@ -95,3 +95,10 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+#
+# Run
+#
+# python -m analysis.make_checkpoint2_figure --baseline outputs/benchmarks/breast_cancer_d8/breast_cancer_baseline_d1_s42_norm_K.npy --local outputs/benchmarks/breast_cancer_d8/breast_cancer_local_local2q_d1_s42_norm_K.npy --multiscale outputs/benchmarks/breast_cancer_d8/breast_cancer_multiscale_multiscale_d1_s42_w0p5-0p5_norm_K.npy --title "breast_cancer (d=8, centered=False): Baseline vs Local vs Multi-Scale (seed=42)" --out figs/checkpoint2/breast_cancer_compare.png
+#
+

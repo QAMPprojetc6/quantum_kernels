@@ -1,0 +1,28 @@
+{
+  "kernel": "baseline",
+  "feature_map": "zz_manual_canonical",
+  "feature_map_impl": "manual-canonical",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 44,
+  "num_qubits": 4,
+  "entanglement": "ring",
+  "dataset": "breast_cancer",
+  "n_samples": 569,
+  "d": 4,
+  "normalize": true,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 569,
+    "trace": 568.9999999999999,
+    "lambda_min": -1.741723230346474e-14,
+    "lambda_max": 71.6679857702803,
+    "effective_rank@1e-06": 209,
+    "threshold": 1e-06
+  }
+}

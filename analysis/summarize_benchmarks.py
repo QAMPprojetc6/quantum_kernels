@@ -380,18 +380,29 @@ def write_markdown(path: Path, rows: List[Dict[str, Any]], fieldnames: List[str]
 
 def main():
     ap = argparse.ArgumentParser(description="Summarize kernel benchmark artifacts into a single table.")
-    ap.add_argument("--root", required=True, help="Root directory to scan (e.g., outputs/benchmarks/circles)")
+    #ap.add_argument("--root", required=True, help="Root directory to scan (e.g., outputs/benchmarks/circles)")
+    group = ap.add_mutually_exclusive_group(required=True)
+    group.add_argument("--root", help="Benchmark root directory (contains metrics.csv and run artifacts).")
+    group.add_argument("--roots", nargs="+", help="One or more benchmark roots to scan (avoid mixing unrelated runs).")
     ap.add_argument("--out", required=True, help="Output CSV path (e.g., outputs/benchmarks/circles/summary.csv)")
     ap.add_argument("--md", default=None, help="Optional Markdown output path")
     ap.add_argument("--include-paths", action="store_true", help="Include artifact paths columns in output")
     args = ap.parse_args()
 
-    root = Path(args.root)
     out_csv = Path(args.out)
     out_md = Path(args.md) if args.md else None
 
-    metrics_index = load_metrics_index(root)
-    trips = find_artifacts(root)
+    #root = Path(args.root)
+    #metrics_index = load_metrics_index(root)
+    #trips = find_artifacts(root)
+
+    roots = [Path(args.root)] if args.root is not None else [Path(r) for r in args.roots]
+
+    metrics_index = {}
+    trips = []
+    for root in roots:
+        metrics_index.update(load_metrics_index(root))
+        trips.extend(find_artifacts(root))
 
     rows: List[Dict[str, Any]] = []
     for t in trips:
@@ -455,5 +466,7 @@ if __name__ == "__main__":
 # python -m analysis.summarize_benchmarks --root outputs/benchmarks/circles --out outputs/benchmarks/circles/summary.csv --md outputs/benchmarks/circles/summary.md
 #
 # python -m analysis.summarize_benchmarks --root outputs/benchmarks/iris --out outputs/benchmarks/iris/summary.csv --md outputs/benchmarks/iris/summary.md
+#
+# python -m analysis.summarize_benchmarks --roots outputs/benchmarks/breast_cancer_d4 outputs/benchmarks/breast_cancer_d6 outputs/benchmarks/parkinsons_d16 --out outputs/benchmarks/summary_all.csv --md  outputs/benchmarks/summary_all.md
 #
 
