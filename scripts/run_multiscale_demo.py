@@ -56,8 +56,8 @@ from scripts.demo_common import (
 
 def main():
     ap = argparse.ArgumentParser(description="Run multiscale kernel demo end-to-end.")
-    ap.add_argument("--dataset", default="make_circles", choices=["make_circles", "iris"])
-    ap.add_argument("--n-samples", type=int, default=150, help="Only used for make_circles")
+    ap.add_argument("--dataset", default="make_circles", choices=["make_circles", "iris", "star_classification"])
+    ap.add_argument("--n-samples", type=int, default=150, help="Used for make_circles and star_classification")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--val-size", type=float, default=0.2)
     ap.add_argument("--test-size", type=float, default=0.2)
@@ -219,4 +219,3 @@ if __name__ == "__main__":
 # Multi-Scale default (pairs + all)
 # python -m scripts.run_multiscale_demo --dataset iris --feature-map zz_manual_canonical --depth 1 --entanglement ring --out-prefix outputs/multiscale/ms_iris_default_pairs_all
 # uses scales: '[[[0,1],[2,3]], [[0,1,2,3]]]'; uniform weights
-

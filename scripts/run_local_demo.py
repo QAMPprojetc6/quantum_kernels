@@ -44,8 +44,8 @@ from scripts.demo_common import (
 
 def main():
     ap = argparse.ArgumentParser(description="Run local kernel demo end-to-end.")
-    ap.add_argument("--dataset", default="make_circles", choices=["make_circles", "iris"])
-    ap.add_argument("--n-samples", type=int, default=150, help="Only used for make_circles")
+    ap.add_argument("--dataset", default="make_circles", choices=["make_circles", "iris", "star_classification"])
+    ap.add_argument("--n-samples", type=int, default=150, help="Used for make_circles and star_classification")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--val-size", type=float, default=0.2)
     ap.add_argument("--test-size", type=float, default=0.2)

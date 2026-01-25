@@ -37,6 +37,8 @@ def load_dataset(
       - iris (full dataset)
       - breast_cancer (full dataset)
       - parkinsons (OpenML id 1488; downloads on first use)
+      - star_classification (local CSV; filters to classes GALAXY and STAR)
+        If n_features exceeds the raw columns, we add simple pairwise interactions.
 
     Preprocessing:
       - shuffle with RNG(seed)
@@ -66,8 +68,70 @@ def load_dataset(
         ds = fetch_openml(data_id=1488, as_frame=False)  # downloads/caches on first call
         X, y = ds.data, ds.target
 
+    elif name in {"star_classification", "star-classification", "star", "stars"}:
+        # SDSS star/galaxy classification (CSV in project); filter to GALAXY and STAR.
+        csv_path = Path(__file__).resolve().parents[1] / "datasets" / "star_classification.csv"
+        if not csv_path.exists():
+            raise FileNotFoundError(f"Missing dataset file: {csv_path}")
+
+        keep_labels = {"GALAXY", "STAR"}
+        X_rows = []
+        y_rows = []
+        with csv_path.open(newline="") as f:
+            reader = csv.DictReader(f)
+            if reader.fieldnames is None or "class" not in reader.fieldnames:
+                raise ValueError("star_classification.csv must include a 'class' column.")
+            feature_cols = [c for c in reader.fieldnames if c != "class"]
+
+            for row in reader:
+                label = (row.get("class") or "").strip().upper()
+                if label not in keep_labels:
+                    continue
+                try:
+                    feats = [float(row[c]) for c in feature_cols]
+                except (KeyError, TypeError, ValueError):
+                    continue
+                X_rows.append(feats)
+                y_rows.append(label)
+
+        if not X_rows:
+            raise ValueError("No rows found for classes GALAXY/STAR in star_classification.csv.")
+
+        X = np.asarray(X_rows, dtype=np.float64)
+        y = np.array([0 if lbl == "GALAXY" else 1 for lbl in y_rows], dtype=int)
+
+        if n_samples is not None and int(n_samples) > 0 and X.shape[0] > int(n_samples):
+            pick = rng.choice(X.shape[0], size=int(n_samples), replace=False)
+            X = X[pick]
+            y = y[pick]
+
+        if n_features is not None and int(n_features) > X.shape[1]:
+            target = int(n_features)
+            base_d = X.shape[1]
+            need = target - base_d
+            pairs = []
+            for i in range(base_d):
+                for j in range(i + 1, base_d):
+                    pairs.append((i, j))
+                    if len(pairs) >= need:
+                        break
+                if len(pairs) >= need:
+                    break
+            if len(pairs) < need:
+                for i in range(base_d):
+                    pairs.append((i, i))
+                    if len(pairs) >= need:
+                        break
+            if len(pairs) < need:
+                raise ValueError(
+                    "Not enough interaction features available to reach n_features."
+                )
+            if pairs:
+                inter = np.column_stack([X[:, i] * X[:, j] for i, j in pairs])
+                X = np.concatenate([X, inter], axis=1)
+
     else:
-        raise ValueError("dataset must be one of: make_circles, iris, breast_cancer, parkinsons.")
+        raise ValueError("dataset must be one of: make_circles, iris, breast_cancer, parkinsons, star_classification.")
 
     # Shuffle (iris comes ordered)
     idx = rng.permutation(len(X))
