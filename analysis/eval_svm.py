@@ -26,7 +26,7 @@ import os
 from typing import List
 
 import numpy as np
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.metrics import accuracy_score
 import csv
 
@@ -72,6 +72,45 @@ def eval_precomputed(K: np.ndarray, y: np.ndarray, train_idx, val_idx, test_idx,
     K_test = K[np.ix_(test_idx, train_idx)]
     y_test_pred = best_model.predict(K_test)
     test_acc = accuracy_score(y[test_idx], y_test_pred)
+
+    return {
+        "best_C": best_C,
+        "val_acc": float(best_val_acc),
+        "test_acc": float(test_acc),
+    }
+
+
+def eval_linear_features(X: np.ndarray, y: np.ndarray, train_idx, val_idx, test_idx, Cs: List[float]):
+    """
+    Evaluate a linear SVM on explicit feature vectors X.
+
+    This is used for Nystrom-style approximations where we build explicit
+    feature maps instead of a full precomputed kernel matrix.
+    """
+    best_val_acc = -1.0
+    best_C = None
+    best_model = None
+
+    X_train = X[train_idx]
+    y_train = y[train_idx]
+    X_val = X[val_idx]
+    y_val = y[val_idx]
+
+    for C in Cs:
+        clf = LinearSVC(C=C, dual=False, max_iter=5000)
+        clf.fit(X_train, y_train)
+        y_val_pred = clf.predict(X_val)
+        val_acc = accuracy_score(y_val, y_val_pred)
+
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            best_C = C
+            best_model = clf
+
+    X_test = X[test_idx]
+    y_test = y[test_idx]
+    y_test_pred = best_model.predict(X_test)
+    test_acc = accuracy_score(y_test, y_test_pred)
 
     return {
         "best_C": best_C,

@@ -19,6 +19,7 @@ from typing import Tuple, Dict, Any, Iterable, List, Optional
 import numpy as np
 from qiskit.quantum_info import Statevector, partial_trace, state_fidelity, DensityMatrix
 from .feature_maps import get_feature_map_spec
+from .baseline_kernel import build_kernel_cross as _baseline_kernel_cross
 
 
 def _eigenclip_psd(
@@ -275,3 +276,165 @@ def build_kernel(
         offdiag_std=np.nanstd(off),
     )
     return K, meta
+
+
+def build_kernel_cross(
+    X: np.ndarray,
+    X_ref: np.ndarray,
+    feature_map: str = "zz_manual",
+    depth: int = 1,
+    backend: str = "statevector",
+    seed: int = 42,
+    partitions: Optional[Iterable[Iterable[int]]] = None,
+    method: str = "rdm",
+    agg: str = "mean",
+    weights: Optional[List[float]] = None,
+    entanglement: Optional[str] = None,
+    **kwargs: Any,
+) -> np.ndarray:
+    """
+    Cross-kernel K(X, X_ref) for the local kernel (for Nystrom use).
+    Supports method="rdm" or "subcircuits".
+    """
+    if backend != "statevector":
+        raise NotImplementedError("local_kernel_cross supports backend='statevector' only.")
+
+    X = np.asarray(X, dtype=float)
+    X_ref = np.asarray(X_ref, dtype=float)
+    if X.ndim != 2 or X_ref.ndim != 2:
+        raise ValueError("X and X_ref must be 2D arrays.")
+    n, d = X.shape
+    m, d_ref = X_ref.shape
+    if d_ref != d:
+        raise ValueError("X and X_ref must have the same feature dimension.")
+
+    rdm_metric = str(kwargs.pop("rdm_metric", "fidelity")).strip().lower()
+    if rdm_metric not in {"fidelity", "hs"}:
+        raise ValueError("rdm_metric must be 'fidelity' or 'hs'.")
+
+    Q = int(d)
+    if partitions is None:
+        partitions = [tuple([i, i + 1]) for i in range(0, Q - 1, 2)]
+    else:
+        partitions = [tuple(part) for part in partitions]
+    if len(partitions) == 0:
+        raise ValueError("At least one partition must be specified.")
+
+    if agg == "weighted":
+        if weights is None:
+            raise ValueError("weights must be provided when agg='weighted'.")
+        w = np.asarray(weights, dtype=float)
+        if w.ndim != 1 or len(w) != len(partitions):
+            raise ValueError("weights must be a 1D list with the same length as partitions.")
+        if np.any(w < 0):
+            raise ValueError("weights must be non-negative.")
+        s = float(w.sum())
+        if s <= 0:
+            raise ValueError("weights must sum to a positive value.")
+        weights_norm = (w / s).tolist()
+    else:
+        weights_norm = [1.0 / len(partitions)] * len(partitions)
+
+    K = np.zeros((n, m), dtype=np.float64)
+    diag_X = np.zeros(n, dtype=np.float64)
+    diag_ref = np.zeros(m, dtype=np.float64)
+
+    if method == "subcircuits":
+        for p_idx, P in enumerate(partitions):
+            qP = len(P)
+            specP = get_feature_map_spec(feature_map, depth=depth, num_qubits=qP, entanglement=entanglement)
+            builder = specP["builder"]
+            w = weights_norm[p_idx]
+
+            # Landmark statevectors for this patch (small qP)
+            S_ref = np.empty((m, 2 ** qP), dtype=np.complex128)
+            for j in range(m):
+                xP = X_ref[j, list(P)]
+                qc = builder(np.asarray(xP, dtype=np.float64).ravel())
+                sv = Statevector.from_instruction(qc)
+                S_ref[j, :] = np.asarray(sv.data, dtype=np.complex128)
+
+            for i in range(n):
+                xP = X[i, list(P)]
+                qc = builder(np.asarray(xP, dtype=np.float64).ravel())
+                sv = Statevector.from_instruction(qc)
+                v = np.asarray(sv.data, dtype=np.complex128)
+                vals = np.abs(v @ S_ref.conj().T) ** 2
+                K[i, :] += w * vals
+                diag_X[i] += w * 1.0
+            diag_ref += w * 1.0
+
+    elif method == "rdm":
+        spec_full = get_feature_map_spec(feature_map, depth=depth, num_qubits=Q, entanglement=entanglement)
+        builder_full = spec_full["builder"]
+
+        full_parts = [idx for idx, p in enumerate(partitions) if len(p) == Q]
+        rdm_parts = [p for p in partitions if len(p) != Q]
+        rdm_weights = [weights_norm[idx] for idx, p in enumerate(partitions) if len(p) != Q]
+
+        # Full-patch contributions (avoid full density matrices)
+        for idx in full_parts:
+            w = weights_norm[idx]
+            K_full = _baseline_kernel_cross(
+                X,
+                X_ref,
+                feature_map=feature_map,
+                depth=depth,
+                backend=backend,
+                seed=seed,
+                entanglement=entanglement,
+            )
+            K += w * K_full
+            diag_X += w * 1.0
+            diag_ref += w * 1.0
+
+        # Precompute RDMs for landmarks (small patches)
+        rhos_ref_by_patch = []
+        diag_ref_by_patch = []
+        for P in rdm_parts:
+            traced_out = [q for q in range(Q) if q not in P]
+            rhos_ref = []
+            diag_ref_patch = np.zeros(m, dtype=np.float64)
+            for j in range(m):
+                qc = builder_full(np.asarray(X_ref[j], dtype=np.float64).ravel())
+                sv = Statevector.from_instruction(qc)
+                rho = partial_trace(sv, traced_out)
+                rhos_ref.append(rho.data)
+                if rdm_metric == "fidelity":
+                    diag_ref_patch[j] = 1.0
+                else:
+                    diag_ref_patch[j] = float(np.trace(rho.data @ rho.data).real)
+            rhos_ref_by_patch.append(np.stack(rhos_ref, axis=0))
+            diag_ref_by_patch.append(diag_ref_patch)
+
+        for i in range(n):
+            qc = builder_full(np.asarray(X[i], dtype=np.float64).ravel())
+            sv = Statevector.from_instruction(qc)
+            for p_idx, P in enumerate(rdm_parts):
+                traced_out = [q for q in range(Q) if q not in P]
+                rho = partial_trace(sv, traced_out)
+                w = rdm_weights[p_idx]
+                if rdm_metric == "fidelity":
+                    diag_X[i] += w * 1.0
+                    vals = [
+                        state_fidelity(rho, DensityMatrix(r), validate=False)
+                        for r in rhos_ref_by_patch[p_idx]
+                    ]
+                    K[i, :] += w * np.asarray(vals, dtype=np.float64)
+                else:
+                    diag_X[i] += w * float(np.trace(rho.data @ rho.data).real)
+                    rhos_ref_arr = rhos_ref_by_patch[p_idx]
+                    vals = np.einsum("ij,mji->m", rho.data, rhos_ref_arr, optimize=True).real
+                    K[i, :] += w * vals
+        for p_idx, diag_ref_patch in enumerate(diag_ref_by_patch):
+            diag_ref += rdm_weights[p_idx] * diag_ref_patch
+
+    else:
+        raise ValueError(f"Unknown method: {method}. Try using 'subcircuits' or 'rdm'")
+
+    # Normalize to unit diagonal (mirrors build_kernel behavior)
+    dX = np.sqrt(np.clip(diag_X, 1e-12, None))
+    dR = np.sqrt(np.clip(diag_ref, 1e-12, None))
+    K = K / dX[:, None] / dR[None, :]
+
+    return K.astype(np.float64, copy=False)

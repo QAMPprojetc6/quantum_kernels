@@ -145,3 +145,69 @@ def build_kernel(
     np.fill_diagonal(K, 1.0)
 
     return K, meta
+
+
+def build_kernel_cross(
+    X: np.ndarray,
+    X_ref: np.ndarray,
+    feature_map: str = "zz",
+    depth: int = 1,
+    backend: str = "statevector",
+    seed: int = 42,
+    entanglement: Optional[str] = None,
+    chunk_size: int = 256,
+    ref_chunk_size: int = 256,
+    **kwargs: Any,
+) -> np.ndarray:
+    """
+    Compute a cross-kernel matrix K(X, X_ref) for the baseline kernel.
+
+    This avoids allocating the full (n+m)x(n+m) kernel matrix and is
+    intended for Nystrom-style approximations.
+    """
+    if backend != "statevector":
+        raise NotImplementedError("baseline_kernel_cross supports backend='statevector' only.")
+
+    X = np.asarray(X, dtype=float)
+    X_ref = np.asarray(X_ref, dtype=float)
+    if X.ndim != 2 or X_ref.ndim != 2:
+        raise ValueError("X and X_ref must be 2D arrays.")
+
+    n, d = X.shape
+    m, d_ref = X_ref.shape
+    if d_ref != d:
+        raise ValueError("X and X_ref must have the same feature dimension.")
+
+    spec = get_feature_map_spec(
+        name=feature_map,
+        depth=depth,
+        num_qubits=int(d),
+        entanglement=entanglement,
+    )
+    builder = spec["builder"]
+
+    dim = 2 ** int(d)
+    K = np.empty((n, m), dtype=np.float64)
+
+    for i_start in range(0, n, max(1, int(chunk_size))):
+        i_end = min(n, i_start + max(1, int(chunk_size)))
+        X_chunk = X[i_start:i_end]
+        S_chunk = np.empty((len(X_chunk), dim), dtype=np.complex128)
+        for i in range(len(X_chunk)):
+            qc = builder(np.asarray(X_chunk[i], dtype=np.float64).ravel())
+            sv = Statevector.from_instruction(qc)
+            S_chunk[i, :] = np.asarray(sv.data, dtype=np.complex128)
+
+        for j_start in range(0, m, max(1, int(ref_chunk_size))):
+            j_end = min(m, j_start + max(1, int(ref_chunk_size)))
+            X_ref_chunk = X_ref[j_start:j_end]
+            S_ref = np.empty((len(X_ref_chunk), dim), dtype=np.complex128)
+            for j in range(len(X_ref_chunk)):
+                qc = builder(np.asarray(X_ref_chunk[j], dtype=np.float64).ravel())
+                sv = Statevector.from_instruction(qc)
+                S_ref[j, :] = np.asarray(sv.data, dtype=np.complex128)
+
+            G = S_chunk @ S_ref.conj().T
+            K[i_start:i_end, j_start:j_end] = (np.abs(G) ** 2).astype(np.float64, copy=False)
+
+    return K

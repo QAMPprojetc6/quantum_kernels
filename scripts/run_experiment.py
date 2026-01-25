@@ -40,11 +40,14 @@ except Exception:  # pragma: no cover
     import tomli as tomllib  # type: ignore
 
 from analysis.diagnostics import plot_heatmap, plot_offdiag_hist, plot_spectrum
-from analysis.eval_svm import eval_precomputed
+from analysis.eval_svm import eval_precomputed, eval_linear_features
 
 from qkernels.baseline_kernel import build_kernel as build_baseline_kernel
+from qkernels.baseline_kernel import build_kernel_cross as build_baseline_kernel_cross
 from qkernels.local_kernel import build_kernel as build_local_kernel
+from qkernels.local_kernel import build_kernel_cross as build_local_kernel_cross
 from qkernels.multiscale_kernel import build_kernel as build_multiscale_kernel
+from qkernels.multiscale_kernel import build_kernel_cross as build_multiscale_kernel_cross
 
 from scripts.demo_common import load_dataset, make_splits, center_kernel, spectrum_stats, normalize_unit_diag, save_splits
 
@@ -79,6 +82,17 @@ def _fmt_float_tag(x: float) -> str:
     # 0.5 -> "0p5", 0.05 -> "0p05"
     s = f"{x:g}"
     return s.replace(".", "p").replace("-", "m")
+
+
+def _inv_sqrt_psd(K: np.ndarray, eps: float = 1e-12) -> np.ndarray:
+    """Compute (K + K.T)/2 inverse square root with PSD clipping."""
+    Ks = 0.5 * (K + K.T)
+    w, V = np.linalg.eigh(Ks)
+    w = np.where(w > eps, w, 0.0)
+    inv_sqrt = np.zeros_like(w)
+    mask = w > 0.0
+    inv_sqrt[mask] = 1.0 / np.sqrt(w[mask])
+    return (V * inv_sqrt) @ V.T
 
 
 def _infer_local_tag(partitions: List[List[int]]) -> str:
@@ -158,11 +172,36 @@ def _run_one(
     rdm_metric: Optional[str] = None,
     scales: Optional[List[List[List[int]]]] = None,
     weights: Optional[List[float]] = None,
+    # Nystrom (optional)
+    nystrom: Optional[Dict[str, Any]] = None,
+    landmarks_idx: Optional[np.ndarray] = None,
+    diag_idx: Optional[np.ndarray] = None,
+    val_size: float = 0.2,
+    test_size: float = 0.2,
 ) -> None:
+    use_nystrom = bool(nystrom and nystrom.get("enabled", False))
+    X_build = X
+    y_build = y
+    train_idx_k = train_idx
+    val_idx_k = val_idx
+    test_idx_k = test_idx
+
+    if use_nystrom:
+        if landmarks_idx is None or diag_idx is None:
+            raise ValueError("Nystrom enabled but landmarks_idx/diag_idx not provided.")
+        X_build = X[diag_idx]
+        y_build = y[diag_idx]
+        train_idx_k, val_idx_k, test_idx_k = make_splits(
+            len(X_build),
+            seed=int(seed),
+            val_size=val_size,
+            test_size=test_size,
+        )
+
     # 1) build K
     if kernel_kind == "baseline":
         K, meta_k = build_baseline_kernel(
-            X,
+            X_build,
             feature_map=feature_map,
             depth=depth,
             backend=backend,
@@ -171,7 +210,7 @@ def _run_one(
         )
     elif kernel_kind == "local":
         K, meta_k = build_local_kernel(
-            X,
+            X_build,
             feature_map=feature_map,
             depth=depth,
             backend=backend,
@@ -185,7 +224,7 @@ def _run_one(
         )
     elif kernel_kind == "multiscale":
         K, meta_k = build_multiscale_kernel(
-            X,
+            X_build,
             feature_map=feature_map,
             depth=depth,
             backend=backend,
@@ -215,7 +254,7 @@ def _run_one(
 
     # 4) save splits (per-run for easy joins)
     splits_path = out_prefix.with_name(out_prefix.name + "_splits.json")
-    save_splits(splits_path.as_posix(), train_idx, val_idx, test_idx, y)
+    save_splits(splits_path.as_posix(), train_idx_k, val_idx_k, test_idx_k, y_build)
 
     # 5) figures (always for uncentered K, like the demos)
     fig_prefix = figs_dir / out_prefix.name
@@ -255,6 +294,26 @@ def _run_one(
     if rdm_metric is not None:
         meta_out["rdm_metric"] = rdm_metric
 
+    if use_nystrom:
+        landmarks_path = out_prefix.with_name(out_prefix.name + "_nystrom_landmarks.json")
+        diag_path = out_prefix.with_name(out_prefix.name + "_nystrom_diag_idx.json")
+        splits_full_path = out_prefix.with_name(out_prefix.name + "_splits_full.json")
+
+        _dump_json(landmarks_path, {"landmarks_idx": landmarks_idx.tolist()})
+        _dump_json(diag_path, {"diag_idx": diag_idx.tolist()})
+        save_splits(splits_full_path.as_posix(), train_idx, val_idx, test_idx, y)
+
+        meta_out["nystrom"] = {
+            "enabled": True,
+            "n_landmarks": int(len(landmarks_idx)),
+            "diag_samples": int(len(diag_idx)),
+            "n_samples_full": int(X.shape[0]),
+            "chunk_size": int(nystrom.get("chunk_size", 256)),
+            "landmarks_path": str(landmarks_path),
+            "diag_idx_path": str(diag_path),
+            "splits_full_path": str(splits_full_path),
+        }
+
     # 7) optional spectrum report (use K_used like demos)
     if report_rank:
         stats = spectrum_stats(K_used)
@@ -265,8 +324,115 @@ def _run_one(
     meta_path = out_prefix.with_name(out_prefix.name + "_meta.json")
     _dump_json(meta_path, meta_out)
 
-    # 8) SVM eval (precomputed, uses K_used like demos)
-    metrics = eval_precomputed(K_used, y, train_idx, val_idx, test_idx, list(map(float, C_grid)))
+    # 8) SVM eval (precomputed or Nystrom)
+    if use_nystrom:
+        X_landmarks = X[landmarks_idx]
+        if kernel_kind == "baseline":
+            K_mm, _ = build_baseline_kernel(
+                X_landmarks,
+                feature_map=feature_map,
+                depth=depth,
+                backend=backend,
+                seed=seed,
+                entanglement=entanglement,
+            )
+            if normalize:
+                K_mm = normalize_unit_diag(K_mm)
+            W_inv_sqrt = _inv_sqrt_psd(K_mm)
+            Phi = np.empty((X.shape[0], K_mm.shape[0]), dtype=np.float32)
+            chunk = int(nystrom.get("chunk_size", 256))
+            for start in range(0, X.shape[0], max(1, chunk)):
+                end = min(X.shape[0], start + max(1, chunk))
+                X_chunk = X[start:end]
+                K_nm_chunk = build_baseline_kernel_cross(
+                    X_chunk,
+                    X_landmarks,
+                    feature_map=feature_map,
+                    depth=depth,
+                    backend=backend,
+                    seed=seed,
+                    entanglement=entanglement,
+                )
+                Phi[start:end, :] = (K_nm_chunk @ W_inv_sqrt).astype(np.float32, copy=False)
+
+        elif kernel_kind == "local":
+            K_mm, _ = build_local_kernel(
+                X_landmarks,
+                feature_map=feature_map,
+                depth=depth,
+                backend=backend,
+                seed=seed,
+                entanglement=entanglement,
+                partitions=partitions,
+                method=method or "rdm",
+                agg=agg or "mean",
+                weights=weights,
+                rdm_metric=rdm_metric,
+            )
+            if normalize:
+                K_mm = normalize_unit_diag(K_mm)
+            W_inv_sqrt = _inv_sqrt_psd(K_mm)
+            Phi = np.empty((X.shape[0], K_mm.shape[0]), dtype=np.float32)
+            chunk = int(nystrom.get("chunk_size", 256))
+            for start in range(0, X.shape[0], max(1, chunk)):
+                end = min(X.shape[0], start + max(1, chunk))
+                X_chunk = X[start:end]
+                K_nm_chunk = build_local_kernel_cross(
+                    X_chunk,
+                    X_landmarks,
+                    feature_map=feature_map,
+                    depth=depth,
+                    backend=backend,
+                    seed=seed,
+                    entanglement=entanglement,
+                    partitions=partitions,
+                    method=method or "rdm",
+                    agg=agg or "mean",
+                    weights=weights,
+                    rdm_metric=rdm_metric,
+                )
+                Phi[start:end, :] = (K_nm_chunk @ W_inv_sqrt).astype(np.float32, copy=False)
+
+        elif kernel_kind == "multiscale":
+            K_mm, _ = build_multiscale_kernel(
+                X_landmarks,
+                feature_map=feature_map,
+                depth=depth,
+                backend=backend,
+                seed=seed,
+                entanglement=entanglement,
+                scales=scales,
+                weights=weights,
+                normalize=normalize,
+            )
+            if normalize:
+                K_mm = normalize_unit_diag(K_mm)
+            W_inv_sqrt = _inv_sqrt_psd(K_mm)
+            Phi = np.empty((X.shape[0], K_mm.shape[0]), dtype=np.float32)
+            chunk = int(nystrom.get("chunk_size", 256))
+            for start in range(0, X.shape[0], max(1, chunk)):
+                end = min(X.shape[0], start + max(1, chunk))
+                X_chunk = X[start:end]
+                K_nm_chunk = build_multiscale_kernel_cross(
+                    X_chunk,
+                    X_landmarks,
+                    feature_map=feature_map,
+                    depth=depth,
+                    backend=backend,
+                    seed=seed,
+                    scales=scales,
+                    weights=weights,
+                    normalize=normalize,
+                    entanglement=entanglement,
+                )
+                Phi[start:end, :] = (K_nm_chunk @ W_inv_sqrt).astype(np.float32, copy=False)
+
+        else:
+            raise ValueError(f"Unknown kernel kind: {kernel_kind}")
+
+        metrics = eval_linear_features(Phi, y, train_idx, val_idx, test_idx, list(map(float, C_grid)))
+    else:
+        metrics = eval_precomputed(K_used, y, train_idx, val_idx, test_idx, list(map(float, C_grid)))
 
     # 9) append metrics row
     metrics_csv = out_prefix.parent / "metrics.csv"
@@ -382,6 +548,12 @@ def main() -> None:
     svm_cfg = cfg.get("svm", {})
     C_grid = list(map(float, svm_cfg.get("C_grid", [0.1, 1.0, 10.0])))
 
+    nystrom_cfg = cfg.get("nystrom", {})
+    nystrom_enabled = bool(nystrom_cfg.get("enabled", False))
+    nystrom_datasets = nystrom_cfg.get("datasets", None)
+    if nystrom_datasets is not None:
+        nystrom_enabled = nystrom_enabled and dataset in set(map(str, nystrom_datasets))
+
     kernels_cfg = cfg.get("kernels", [])
     if not isinstance(kernels_cfg, list) or len(kernels_cfg) == 0:
         raise ValueError("Config must include at least one [[kernels]] entry.")
@@ -403,6 +575,27 @@ def main() -> None:
             pca=use_pca,
         )
         train_idx, val_idx, test_idx = make_splits(len(X), seed=int(seed), val_size=val_size, test_size=test_size)
+
+        nystrom_params = None
+        landmarks_idx = None
+        diag_idx = None
+        if nystrom_enabled:
+            n_total = len(X)
+            n_landmarks = int(nystrom_cfg.get("n_landmarks", 1000))
+            diag_samples = int(nystrom_cfg.get("diag_samples", min(2000, n_total)))
+            if n_landmarks <= 0 or diag_samples <= 0:
+                raise ValueError("Nystrom requires positive n_landmarks and diag_samples.")
+            n_landmarks = min(n_landmarks, n_total)
+            diag_samples = min(diag_samples, n_total)
+            rng = np.random.default_rng(int(seed))
+            landmarks_idx = rng.choice(n_total, size=n_landmarks, replace=False)
+            diag_idx = rng.choice(n_total, size=diag_samples, replace=False)
+            nystrom_params = {
+                "enabled": True,
+                "n_landmarks": n_landmarks,
+                "diag_samples": diag_samples,
+                "chunk_size": int(nystrom_cfg.get("chunk_size", 256)),
+            }
 
         for depth in depth_grid:
             for center in center_grid:
@@ -432,12 +625,12 @@ def main() -> None:
                             centered=bool(center),
                         )
                         out_prefix = out_dir / case
-                        _run_one(
-                            out_prefix=out_prefix,
-                            figs_dir=figs_dir,
-                            kernel_kind="baseline",
-                            X=X,
-                            y=y,
+                            _run_one(
+                                out_prefix=out_prefix,
+                                figs_dir=figs_dir,
+                                kernel_kind="baseline",
+                                X=X,
+                                y=y,
                             train_idx=train_idx,
                             val_idx=val_idx,
                             test_idx=test_idx,
@@ -448,10 +641,15 @@ def main() -> None:
                             depth=int(depth),
                             backend=backend,
                             C_grid=C_grid,
-                            normalize=normalize,
-                            center=bool(center),
-                            report_rank=report_rank,
-                        )
+                                normalize=normalize,
+                                center=bool(center),
+                                report_rank=report_rank,
+                                nystrom=nystrom_params,
+                                landmarks_idx=landmarks_idx,
+                                diag_idx=diag_idx,
+                                val_size=val_size,
+                                test_size=test_size,
+                            )
 
                     elif kname == "local":
                         partitions = kspec.get("partitions", None)
@@ -478,12 +676,12 @@ def main() -> None:
                             centered=bool(center),
                         )
                         out_prefix = out_dir / case
-                        _run_one(
-                            out_prefix=out_prefix,
-                            figs_dir=figs_dir,
-                            kernel_kind="local",
-                            X=X,
-                            y=y,
+                            _run_one(
+                                out_prefix=out_prefix,
+                                figs_dir=figs_dir,
+                                kernel_kind="local",
+                                X=X,
+                                y=y,
                             train_idx=train_idx,
                             val_idx=val_idx,
                             test_idx=test_idx,
@@ -497,11 +695,16 @@ def main() -> None:
                             normalize=normalize,
                             center=bool(center),
                             report_rank=report_rank,
-                            method=method,
-                            agg=agg,
-                            partitions=partitions,
-                            rdm_metric=rdm_metric,
-                        )
+                                method=method,
+                                agg=agg,
+                                partitions=partitions,
+                                rdm_metric=rdm_metric,
+                                nystrom=nystrom_params,
+                                landmarks_idx=landmarks_idx,
+                                diag_idx=diag_idx,
+                                val_size=val_size,
+                                test_size=test_size,
+                            )
 
                     elif kname == "multiscale":
                         scales = kspec.get("scales", None)
@@ -559,6 +762,11 @@ def main() -> None:
                                 report_rank=report_rank,
                                 scales=scales,
                                 weights=weights,
+                                nystrom=nystrom_params,
+                                landmarks_idx=landmarks_idx,
+                                diag_idx=diag_idx,
+                                val_size=val_size,
+                                test_size=test_size,
                             )
 
     print("[DONE] Benchmarks finished.")
@@ -576,4 +784,3 @@ if __name__ == "__main__":
 #
 # python -m scripts.run_experiment --config configs/iris.toml
 #
-

@@ -34,6 +34,7 @@ from typing import Tuple, Dict, Any, Iterable, List, Optional
 import numpy as np
 
 from .feature_maps import get_feature_map_spec
+from .baseline_kernel import build_kernel_cross as _baseline_kernel_cross
 from qiskit.quantum_info import Statevector, DensityMatrix, partial_trace
 
 
@@ -267,3 +268,119 @@ def build_kernel(
     }
 
     return K, meta
+
+
+def build_kernel_cross(
+    X: np.ndarray,
+    X_ref: np.ndarray,
+    feature_map: str = "zz",
+    depth: int = 1,
+    backend: str = "statevector",
+    seed: int = 42,
+    scales: Optional[List[Iterable[Iterable[int]]]] = None,
+    weights: Optional[List[float]] = None,
+    normalize: bool = True,
+    **kwargs: Any,
+) -> np.ndarray:
+    """
+    Cross-kernel K(X, X_ref) for the multiscale kernel (for Nystrom use).
+    """
+    if backend != "statevector":
+        raise NotImplementedError("multiscale_kernel_cross supports backend='statevector' only.")
+
+    X = np.asarray(X, dtype=float)
+    X_ref = np.asarray(X_ref, dtype=float)
+    if X.ndim != 2 or X_ref.ndim != 2:
+        raise ValueError("X and X_ref must be 2D arrays.")
+    n, d = X.shape
+    m, d_ref = X_ref.shape
+    if d_ref != d:
+        raise ValueError("X and X_ref must have the same feature dimension.")
+
+    if scales is None:
+        scales = _ensure_scales_default(d)
+    scales_canon = _validate_scales(scales, d)
+    if weights is None:
+        weights = [1.0 / len(scales_canon)] * len(scales_canon)
+    w_scales = _validate_weights(weights, len(scales_canon))
+
+    entanglement = kwargs.pop("entanglement", None)
+
+    spec_full = get_feature_map_spec(feature_map, depth=depth, num_qubits=d, entanglement=entanglement)
+    builder_full = spec_full["builder"]
+
+    K = np.zeros((n, m), dtype=np.float64)
+    diag_X = np.zeros(n, dtype=np.float64)
+    diag_ref = np.zeros(m, dtype=np.float64)
+
+    for s_idx, patches in enumerate(scales_canon):
+        w_s = float(w_scales[s_idx])
+        num_patches = len(patches)
+
+        K_s = np.zeros((n, m), dtype=np.float64)
+        diag_X_s = np.zeros(n, dtype=np.float64)
+        diag_ref_s = np.zeros(m, dtype=np.float64)
+
+        full_patches = [p for p in patches if len(p) == d]
+        rdm_patches = [p for p in patches if len(p) != d]
+
+        # Full-patch contributions (fidelity)
+        for _ in full_patches:
+            K_full = _baseline_kernel_cross(
+                X,
+                X_ref,
+                feature_map=feature_map,
+                depth=depth,
+                backend=backend,
+                seed=seed,
+                entanglement=entanglement,
+            )
+            K_s += K_full
+            diag_X_s += 1.0
+            diag_ref_s += 1.0
+
+        # RDM/HS contributions for local patches
+        rhos_ref_by_patch = []
+        diag_ref_by_patch = []
+        for P in rdm_patches:
+            traced_out = [q for q in range(d) if q not in P]
+            rhos_ref = []
+            diag_ref_patch = np.zeros(m, dtype=np.float64)
+            for j in range(m):
+                qc = builder_full(np.asarray(X_ref[j], dtype=np.float64).ravel())
+                sv = Statevector.from_instruction(qc)
+                rho = partial_trace(sv, traced_out)
+                rhos_ref.append(rho.data)
+                diag_ref_patch[j] = float(np.trace(rho.data @ rho.data).real)
+            rhos_ref_by_patch.append(np.stack(rhos_ref, axis=0))
+            diag_ref_by_patch.append(diag_ref_patch)
+
+        for i in range(n):
+            qc = builder_full(np.asarray(X[i], dtype=np.float64).ravel())
+            sv = Statevector.from_instruction(qc)
+            for p_idx, P in enumerate(rdm_patches):
+                traced_out = [q for q in range(d) if q not in P]
+                rho = partial_trace(sv, traced_out)
+                diag_X_s[i] += float(np.trace(rho.data @ rho.data).real)
+                rhos_ref_arr = rhos_ref_by_patch[p_idx]
+                vals = np.einsum("ij,mji->m", rho.data, rhos_ref_arr, optimize=True).real
+                K_s[i, :] += vals
+
+        for diag_ref_patch in diag_ref_by_patch:
+            diag_ref_s += diag_ref_patch
+
+        if num_patches > 0:
+            K_s /= float(num_patches)
+            diag_X_s /= float(num_patches)
+            diag_ref_s /= float(num_patches)
+
+        K += w_s * K_s
+        diag_X += w_s * diag_X_s
+        diag_ref += w_s * diag_ref_s
+
+    if normalize:
+        dX = np.sqrt(np.clip(diag_X, 1e-12, None))
+        dR = np.sqrt(np.clip(diag_ref, 1e-12, None))
+        K = K / dX[:, None] / dR[None, :]
+
+    return K.astype(np.float64, copy=False)
