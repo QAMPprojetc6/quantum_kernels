@@ -625,12 +625,12 @@ def main() -> None:
                             centered=bool(center),
                         )
                         out_prefix = out_dir / case
-                            _run_one(
-                                out_prefix=out_prefix,
-                                figs_dir=figs_dir,
-                                kernel_kind="baseline",
-                                X=X,
-                                y=y,
+                        _run_one(
+                            out_prefix=out_prefix,
+                            figs_dir=figs_dir,
+                            kernel_kind="baseline",
+                            X=X,
+                            y=y,
                             train_idx=train_idx,
                             val_idx=val_idx,
                             test_idx=test_idx,
@@ -641,15 +641,15 @@ def main() -> None:
                             depth=int(depth),
                             backend=backend,
                             C_grid=C_grid,
-                                normalize=normalize,
-                                center=bool(center),
-                                report_rank=report_rank,
-                                nystrom=nystrom_params,
-                                landmarks_idx=landmarks_idx,
-                                diag_idx=diag_idx,
-                                val_size=val_size,
-                                test_size=test_size,
-                            )
+                            normalize=normalize,
+                            center=bool(center),
+                            report_rank=report_rank,
+                            nystrom=nystrom_params,
+                            landmarks_idx=landmarks_idx,
+                            diag_idx=diag_idx,
+                            val_size=val_size,
+                            test_size=test_size,
+                        )
 
                     elif kname == "local":
                         partitions = kspec.get("partitions", None)
@@ -676,12 +676,12 @@ def main() -> None:
                             centered=bool(center),
                         )
                         out_prefix = out_dir / case
-                            _run_one(
-                                out_prefix=out_prefix,
-                                figs_dir=figs_dir,
-                                kernel_kind="local",
-                                X=X,
-                                y=y,
+                        _run_one(
+                            out_prefix=out_prefix,
+                            figs_dir=figs_dir,
+                            kernel_kind="local",
+                            X=X,
+                            y=y,
                             train_idx=train_idx,
                             val_idx=val_idx,
                             test_idx=test_idx,
@@ -695,16 +695,16 @@ def main() -> None:
                             normalize=normalize,
                             center=bool(center),
                             report_rank=report_rank,
-                                method=method,
-                                agg=agg,
-                                partitions=partitions,
-                                rdm_metric=rdm_metric,
-                                nystrom=nystrom_params,
-                                landmarks_idx=landmarks_idx,
-                                diag_idx=diag_idx,
-                                val_size=val_size,
-                                test_size=test_size,
-                            )
+                            method=method,
+                            agg=agg,
+                            partitions=partitions,
+                            rdm_metric=rdm_metric,
+                            nystrom=nystrom_params,
+                            landmarks_idx=landmarks_idx,
+                            diag_idx=diag_idx,
+                            val_size=val_size,
+                            test_size=test_size,
+                        )
 
                     elif kname == "multiscale":
                         scales = kspec.get("scales", None)
