@@ -1,0 +1,11 @@
+| Kernel | Dataset | n | d (qubits) | Feature map (name, depth, entanglement) | Scales / Patches | Weights | Centered? | Off-diag mean | Off-diag std | Off-diag p5 | Off-diag p50 | Off-diag p95 | Eff. rank (entropy) | λ_min (sym) | Alignment (centered) | SVM best C | Val acc | Test acc | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear |  |  | False | 0.06259 | 0.07858 | 0.001174 | 0.03501 | 0.2135 | 145.1 | -7.669e-14 | 0.005581 | 0.1 | 0.7225 | 0.7725 |  |
+| baseline | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear |  |  | False | 0.0626 | 0.07874 | 0.001163 | 0.03501 | 0.2137 | 144.9 | -3.038e-14 | 0.005506 | 10.0 | 0.7525 | 0.745 |  |
+| baseline | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear |  |  | False | 0.06251 | 0.0786 | 0.001167 | 0.03488 | 0.2136 | 145.1 | -2.794e-14 | 0.007757 | 0.1 | 0.735 | 0.73 |  |
+| local | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear | [[0, 1], [2, 3]] |  | False | 0.2502 | 0.1089 | 0.08856 | 0.241 | 0.4411 | 81.17 | 2.693e-05 | 0.002593 | 0.1 | 0.7225 | 0.7725 |  |
+| local | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear | [[0, 1], [2, 3]] |  | False | 0.2502 | 0.1102 | 0.08742 | 0.2405 | 0.444 | 77.73 | 2.363e-05 | 0.003406 | 0.1 | 0.75 | 0.7475 |  |
+| local | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear | [[0, 1], [2, 3]] |  | False | 0.25 | 0.108 | 0.0893 | 0.2411 | 0.4392 | 84.06 | 3.039e-05 | 0.004325 | 0.1 | 0.735 | 0.73 |  |
+| multiscale | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear | [[[0, 1], [2, 3]], [[0, 1, 2, 3]]] | [0.5, 0.5] | False | 0.1799 | 0.09877 | 0.05251 | 0.164 | 0.3602 | 75.67 | -8.831e-14 | 0.003535 | 0.1 | 0.7225 | 0.7725 |  |
+| multiscale | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear | [[[0, 1], [2, 3]], [[0, 1, 2, 3]]] | [0.5, 0.5] | False | 0.1791 | 0.09925 | 0.05153 | 0.163 | 0.3605 | 75.38 | -5.676e-14 | 0.004051 | 0.1 | 0.75 | 0.7475 |  |
+| multiscale | star_classification | 2000 | 4 | zz_qiskit, depth=1, ent=linear | [[[0, 1], [2, 3]], [[0, 1, 2, 3]]] | [0.5, 0.5] | False | 0.1805 | 0.09855 | 0.05314 | 0.1648 | 0.3602 | 75.79 | -4.071e-14 | 0.00568 | 0.1 | 0.735 | 0.73 |  |

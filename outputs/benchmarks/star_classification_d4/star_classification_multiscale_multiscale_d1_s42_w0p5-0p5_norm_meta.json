@@ -1,0 +1,65 @@
+{
+  "kernel": "multiscale",
+  "feature_map": "zz_qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 42,
+  "scales": [
+    [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    [
+      [
+        0,
+        1,
+        2,
+        3
+      ]
+    ]
+  ],
+  "weights": [
+    0.5,
+    0.5
+  ],
+  "normalize": true,
+  "n_samples": 81039,
+  "n_qubits": 4,
+  "entanglement": "linear",
+  "per_scale_diag_means": [
+    0.7520481691930347,
+    0.9999999999999984
+  ],
+  "dataset": "star_classification",
+  "d": 4,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "nystrom": {
+    "enabled": true,
+    "n_landmarks": 1000,
+    "diag_samples": 2000,
+    "n_samples_full": 81039,
+    "chunk_size": 256,
+    "landmarks_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/star_classification_d4/star_classification_multiscale_multiscale_d1_s42_w0p5-0p5_norm_nystrom_landmarks.json",
+    "diag_idx_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/star_classification_d4/star_classification_multiscale_multiscale_d1_s42_w0p5-0p5_norm_nystrom_diag_idx.json",
+    "splits_full_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/star_classification_d4/star_classification_multiscale_multiscale_d1_s42_w0p5-0p5_norm_splits_full.json"
+  },
+  "spectrum_stats": {
+    "n": 2000,
+    "trace": 1999.9999999999998,
+    "lambda_min": -5.3127117050191987e-14,
+    "lambda_max": 363.02313073317464,
+    "effective_rank@1e-06": 185,
+    "threshold": 1e-06
+  }
+}
