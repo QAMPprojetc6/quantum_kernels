@@ -1,0 +1,55 @@
+[run]
+dataset = "exam_score_prediction"
+n_samples = 0
+n_features = 12
+pca = true
+seed_grid = [42, 43, 44]
+val_size = 0.2
+test_size = 0.2
+center_grid = [false]
+
+[feature_map]
+name = "zz_qiskit"
+depth_grid = [1]
+entanglement = "linear"
+backend = "statevector"
+shots = 0
+
+[paths]
+out_dir = "outputs/benchmarks/exam_score_prediction_d12"
+figs_dir = "figs/benchmarks/exam_score_prediction_d12"
+
+[[kernels]]
+name = "baseline"
+enabled = true
+normalize = true
+
+[[kernels]]
+name = "local"
+enabled = true
+method = "rdm"
+rdm_metric = "hs"
+agg = "mean"
+partitions = [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11]]
+normalize = true
+
+[[kernels]]
+name = "multiscale"
+enabled = true
+normalize = true
+scales = [
+  [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11]],
+  [[0,1,2,3,4,5,6,7,8,9,10,11]]
+]
+weights_grid = [
+  [0.5, 0.5]
+]
+
+[svm]
+C = [0.1, 1.0, 10.0]
+
+[nystrom]
+enabled = true
+n_landmarks = 1000
+diag_samples = 2000
+chunk_size = 256

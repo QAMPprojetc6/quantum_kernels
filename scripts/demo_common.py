@@ -39,6 +39,8 @@ def load_dataset(
       - parkinsons (OpenML id 1488; downloads on first use)
       - star_classification (local CSV; filters to classes GALAXY and STAR)
         If n_features exceeds the raw columns, we add simple pairwise interactions.
+      - exam_score_prediction (local CSV; pass/fail from exam_score >= 60)
+        If n_features exceeds the raw columns, we add simple pairwise interactions.
 
     Preprocessing:
       - shuffle with RNG(seed)
@@ -47,7 +49,7 @@ def load_dataset(
       - map to radians: X <- pi * X / 2
     """
     from sklearn.datasets import make_circles, load_iris, load_breast_cancer, fetch_openml
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.preprocessing import StandardScaler, OneHotEncoder
     from sklearn.decomposition import PCA
 
     rng = np.random.default_rng(seed)
@@ -130,8 +132,104 @@ def load_dataset(
                 inter = np.column_stack([X[:, i] * X[:, j] for i, j in pairs])
                 X = np.concatenate([X, inter], axis=1)
 
+    elif name in {"exam_score_prediction", "exam-score-prediction", "exam_score", "exam"}:
+        # Exam score prediction -> binary classification (pass >= 60).
+        csv_path = Path(__file__).resolve().parents[1] / "datasets" / "Exam_Score_Prediction.csv"
+        if not csv_path.exists():
+            raise FileNotFoundError(f"Missing dataset file: {csv_path}")
+
+        def _is_float(val: str) -> bool:
+            try:
+                float(val)
+                return True
+            except (TypeError, ValueError):
+                return False
+
+        rows = []
+        y_rows = []
+        fieldnames = None
+        with csv_path.open(newline="") as f:
+            reader = csv.DictReader(f)
+            fieldnames = reader.fieldnames
+            if fieldnames is None or "exam_score" not in fieldnames:
+                raise ValueError("Exam_Score_Prediction.csv must include an 'exam_score' column.")
+
+            for row in reader:
+                score_raw = row.get("exam_score", "")
+                if not _is_float(score_raw):
+                    continue
+                score = float(score_raw)
+                y_rows.append(1 if score >= 60.0 else 0)
+                rows.append(row)
+
+        if not rows:
+            raise ValueError("No valid rows found in Exam_Score_Prediction.csv.")
+
+        drop_cols = {"exam_score", "student_id"}
+        feature_cols = [c for c in fieldnames if c not in drop_cols]
+
+        numeric_cols = []
+        categorical_cols = []
+        for col in feature_cols:
+            vals = [r.get(col, "") for r in rows]
+            if all((v == "" or _is_float(v)) for v in vals):
+                numeric_cols.append(col)
+            else:
+                categorical_cols.append(col)
+
+        if numeric_cols:
+            X_num = np.array(
+                [[float(r.get(c, 0.0) or 0.0) for c in numeric_cols] for r in rows],
+                dtype=np.float64,
+            )
+        else:
+            X_num = np.zeros((len(rows), 0), dtype=np.float64)
+
+        if categorical_cols:
+            X_cat = [[(r.get(c, "") or "") for c in categorical_cols] for r in rows]
+            enc = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
+            X_cat_enc = enc.fit_transform(X_cat)
+            X = np.concatenate([X_num, X_cat_enc], axis=1)
+        else:
+            X = X_num
+
+        y = np.array(y_rows, dtype=int)
+
+        if n_samples is not None and int(n_samples) > 0 and X.shape[0] > int(n_samples):
+            pick = rng.choice(X.shape[0], size=int(n_samples), replace=False)
+            X = X[pick]
+            y = y[pick]
+
+        if n_features is not None and int(n_features) > X.shape[1]:
+            target = int(n_features)
+            base_d = X.shape[1]
+            need = target - base_d
+            pairs = []
+            for i in range(base_d):
+                for j in range(i + 1, base_d):
+                    pairs.append((i, j))
+                    if len(pairs) >= need:
+                        break
+                if len(pairs) >= need:
+                    break
+            if len(pairs) < need:
+                for i in range(base_d):
+                    pairs.append((i, i))
+                    if len(pairs) >= need:
+                        break
+            if len(pairs) < need:
+                raise ValueError(
+                    "Not enough interaction features available to reach n_features."
+                )
+            if pairs:
+                inter = np.column_stack([X[:, i] * X[:, j] for i, j in pairs])
+                X = np.concatenate([X, inter], axis=1)
+
     else:
-        raise ValueError("dataset must be one of: make_circles, iris, breast_cancer, parkinsons, star_classification.")
+        raise ValueError(
+            "dataset must be one of: make_circles, iris, breast_cancer, parkinsons, "
+            "star_classification, exam_score_prediction."
+        )
 
     # Shuffle (iris comes ordered)
     idx = rng.permutation(len(X))
