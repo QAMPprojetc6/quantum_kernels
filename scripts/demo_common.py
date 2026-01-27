@@ -42,6 +42,7 @@ def load_dataset(
       - exam_score_prediction (local CSV; pass/fail from exam_score >= 60)
         If n_features exceeds the raw columns, we add simple pairwise interactions.
       - ionosphere (local CSV; labels in last column, 'g' or 'b')
+      - heart_disease (local CSV; target in column 'num', binary)
 
     Preprocessing:
       - shuffle with RNG(seed)
@@ -260,10 +261,78 @@ def load_dataset(
             X = X[pick]
             y = y[pick]
 
+    elif name in {"heart_disease", "heart-disease", "heart"}:
+        # Heart disease dataset: target is column 'num' (0 = no disease, >0 = disease).
+        csv_path = Path(__file__).resolve().parents[1] / "datasets" / "heart_disease_all_sites.csv"
+        if not csv_path.exists():
+            raise FileNotFoundError(f"Missing dataset file: {csv_path}")
+
+        def _is_float(val: str) -> bool:
+            try:
+                float(val)
+                return True
+            except (TypeError, ValueError):
+                return False
+
+        rows = []
+        y_rows = []
+        fieldnames = None
+        with csv_path.open(newline="") as f:
+            reader = csv.DictReader(f)
+            fieldnames = reader.fieldnames
+            if fieldnames is None or "num" not in fieldnames:
+                raise ValueError("heart_disease_all_sites.csv must include a 'num' column.")
+
+            for row in reader:
+                num_raw = row.get("num", "")
+                if not _is_float(num_raw):
+                    continue
+                num = float(num_raw)
+                y_rows.append(1 if num > 0 else 0)
+                rows.append(row)
+
+        if not rows:
+            raise ValueError("No valid rows found in heart_disease_all_sites.csv.")
+
+        drop_cols = {"num", "site"}
+        feature_cols = [c for c in fieldnames if c not in drop_cols]
+
+        numeric_cols = []
+        categorical_cols = []
+        for col in feature_cols:
+            vals = [r.get(col, "") for r in rows]
+            if all((v == "" or _is_float(v)) for v in vals):
+                numeric_cols.append(col)
+            else:
+                categorical_cols.append(col)
+
+        if numeric_cols:
+            X_num = np.array(
+                [[float(r.get(c, 0.0) or 0.0) for c in numeric_cols] for r in rows],
+                dtype=np.float64,
+            )
+        else:
+            X_num = np.zeros((len(rows), 0), dtype=np.float64)
+
+        if categorical_cols:
+            X_cat = [[(r.get(c, "") or "") for c in categorical_cols] for r in rows]
+            enc = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
+            X_cat_enc = enc.fit_transform(X_cat)
+            X = np.concatenate([X_num, X_cat_enc], axis=1)
+        else:
+            X = X_num
+
+        y = np.array(y_rows, dtype=int)
+
+        if n_samples is not None and int(n_samples) > 0 and X.shape[0] > int(n_samples):
+            pick = rng.choice(X.shape[0], size=int(n_samples), replace=False)
+            X = X[pick]
+            y = y[pick]
+
     else:
         raise ValueError(
             "dataset must be one of: make_circles, iris, breast_cancer, parkinsons, "
-            "star_classification, exam_score_prediction, ionosphere."
+            "star_classification, exam_score_prediction, ionosphere, heart_disease."
         )
 
     # Shuffle (iris comes ordered)
