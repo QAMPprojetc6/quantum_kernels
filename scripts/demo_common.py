@@ -41,6 +41,7 @@ def load_dataset(
         If n_features exceeds the raw columns, we add simple pairwise interactions.
       - exam_score_prediction (local CSV; pass/fail from exam_score >= 60)
         If n_features exceeds the raw columns, we add simple pairwise interactions.
+      - ionosphere (local CSV; labels in last column, 'g' or 'b')
 
     Preprocessing:
       - shuffle with RNG(seed)
@@ -225,10 +226,44 @@ def load_dataset(
                 inter = np.column_stack([X[:, i] * X[:, j] for i, j in pairs])
                 X = np.concatenate([X, inter], axis=1)
 
+    elif name in {"ionosphere", "iono"}:
+        # Ionosphere dataset: 34 continuous features + class label in last column ('g'/'b').
+        csv_path = Path(__file__).resolve().parents[1] / "datasets" / "ionosphere.csv"
+        if not csv_path.exists():
+            raise FileNotFoundError(f"Missing dataset file: {csv_path}")
+
+        X_rows = []
+        y_rows = []
+        with csv_path.open(newline="") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if len(row) < 2:
+                    continue
+                label = (row[-1] or "").strip().lower()
+                if label not in {"g", "b"}:
+                    continue
+                try:
+                    feats = [float(v) for v in row[:-1]]
+                except (TypeError, ValueError):
+                    continue
+                X_rows.append(feats)
+                y_rows.append(1 if label == "g" else 0)
+
+        if not X_rows:
+            raise ValueError("No valid rows found in ionosphere.csv.")
+
+        X = np.asarray(X_rows, dtype=np.float64)
+        y = np.array(y_rows, dtype=int)
+
+        if n_samples is not None and int(n_samples) > 0 and X.shape[0] > int(n_samples):
+            pick = rng.choice(X.shape[0], size=int(n_samples), replace=False)
+            X = X[pick]
+            y = y[pick]
+
     else:
         raise ValueError(
             "dataset must be one of: make_circles, iris, breast_cancer, parkinsons, "
-            "star_classification, exam_score_prediction."
+            "star_classification, exam_score_prediction, ionosphere."
         )
 
     # Shuffle (iris comes ordered)

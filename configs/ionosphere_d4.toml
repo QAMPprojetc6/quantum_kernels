@@ -1,0 +1,49 @@
+[run]
+dataset = "ionosphere"
+n_samples = 0
+n_features = 4
+pca = true
+seed_grid = [42, 43, 44]
+val_size = 0.2
+test_size = 0.2
+center_grid = [false]
+
+[feature_map]
+name = "zz_qiskit"
+depth_grid = [1]
+entanglement = "linear"
+backend = "statevector"
+shots = 0
+
+[paths]
+out_dir = "outputs/benchmarks/ionosphere_d4"
+figs_dir = "figs/benchmarks/ionosphere_d4"
+
+[[kernels]]
+name = "baseline"
+enabled = true
+normalize = true
+
+[[kernels]]
+name = "local"
+enabled = true
+method = "rdm"
+rdm_metric = "hs"
+agg = "mean"
+partitions = [[0,1],[2,3]]
+normalize = true
+
+[[kernels]]
+name = "multiscale"
+enabled = true
+normalize = true
+scales = [
+  [[0,1],[2,3]],
+  [[0,1,2,3]]
+]
+weights_grid = [
+  [0.5, 0.5]
+]
+
+[svm]
+C = [0.1, 1.0, 10.0]

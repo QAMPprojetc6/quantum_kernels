@@ -45,13 +45,13 @@ def main():
     ap.add_argument(
         "--dataset",
         default="make_circles",
-        choices=["make_circles", "iris", "star_classification", "exam_score_prediction"],
+        choices=["make_circles", "iris", "star_classification", "exam_score_prediction", "ionosphere"],
     )
     ap.add_argument(
         "--n-samples",
         type=int,
         default=150,
-        help="Used for make_circles, star_classification, and exam_score_prediction",
+        help="Used for make_circles, star_classification, exam_score_prediction, and ionosphere",
     )
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--val-size", type=float, default=0.2)
