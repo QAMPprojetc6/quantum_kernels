@@ -142,18 +142,20 @@ def normalize_out_prefix_key(p: str) -> str:
     """
     Normalize an out_prefix to a stable join key across OS/path styles.
 
-    We use only the basename (final path component), so:
-      D:\\...\\outputs\\benchmarks\\circles\\circles_baseline_d1_s42
-      outputs/benchmarks/circles/circles_baseline_d1_s42
-    both map to:
-      circles_baseline_d1_s42
+    Include the parent directory to avoid collisions across d-sweep roots.
+    Example:
+      outputs/benchmarks/heart_disease_d4/heart_disease_baseline_d1_s42
+    becomes:
+      heart_disease_d4/heart_disease_baseline_d1_s42
     """
     if not p:
         return ""
     p = p.strip().strip('"').strip("'")
-    # Normalize slashes, then take last component.
     p = p.replace("\\", "/")
-    return p.split("/")[-1]
+    parts = [x for x in p.split("/") if x]
+    if len(parts) >= 2:
+        return "/".join(parts[-2:])
+    return parts[-1] if parts else ""
 
 
 def load_metrics_index(root: Path) -> Dict[str, Dict[str, str]]:
@@ -469,4 +471,3 @@ if __name__ == "__main__":
 #
 # python -m analysis.summarize_benchmarks --roots outputs/benchmarks/breast_cancer_d4 outputs/benchmarks/breast_cancer_d6 outputs/benchmarks/parkinsons_d16 --out outputs/benchmarks/summary_all.csv --md  outputs/benchmarks/summary_all.md
 #
-
