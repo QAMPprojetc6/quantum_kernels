@@ -43,6 +43,7 @@ def load_dataset(
         If n_features exceeds the raw columns, we add simple pairwise interactions.
       - ionosphere (local CSV; labels in last column, 'g' or 'b')
       - heart_disease (local CSV; target in column 'num', binary)
+        If n_features exceeds the raw columns, we add simple pairwise interactions.
 
     Preprocessing:
       - shuffle with RNG(seed)
@@ -328,6 +329,31 @@ def load_dataset(
             pick = rng.choice(X.shape[0], size=int(n_samples), replace=False)
             X = X[pick]
             y = y[pick]
+
+        if n_features is not None and int(n_features) > X.shape[1]:
+            target = int(n_features)
+            base_d = X.shape[1]
+            need = target - base_d
+            pairs = []
+            for i in range(base_d):
+                for j in range(i + 1, base_d):
+                    pairs.append((i, j))
+                    if len(pairs) >= need:
+                        break
+                if len(pairs) >= need:
+                    break
+            if len(pairs) < need:
+                for i in range(base_d):
+                    pairs.append((i, i))
+                    if len(pairs) >= need:
+                        break
+            if len(pairs) < need:
+                raise ValueError(
+                    "Not enough interaction features available to reach n_features."
+                )
+            if pairs:
+                inter = np.column_stack([X[:, i] * X[:, j] for i, j in pairs])
+                X = np.concatenate([X, inter], axis=1)
 
     else:
         raise ValueError(
