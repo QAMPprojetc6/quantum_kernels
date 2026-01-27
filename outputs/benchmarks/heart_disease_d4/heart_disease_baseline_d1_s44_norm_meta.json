@@ -1,0 +1,28 @@
+{
+  "kernel": "baseline",
+  "feature_map": "zz_qiskit",
+  "feature_map_impl": "qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 44,
+  "num_qubits": 4,
+  "entanglement": "linear",
+  "dataset": "heart_disease",
+  "n_samples": 920,
+  "d": 4,
+  "normalize": true,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 920,
+    "trace": 920.0000000000002,
+    "lambda_min": -1.0193201646859669e-14,
+    "lambda_max": 58.724346388434014,
+    "effective_rank@1e-06": 185,
+    "threshold": 1e-06
+  }
+}

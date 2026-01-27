@@ -1,0 +1,8 @@
+{
+  "n": 920,
+  "trace": 920.0,
+  "lambda_min": 0.06603586808785455,
+  "lambda_max": 230.7620106536201,
+  "effective_rank@1e-06": 920,
+  "threshold": 1e-06
+}

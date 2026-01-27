@@ -1,0 +1,61 @@
+{
+  "kernel": "multiscale",
+  "feature_map": "zz_qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 44,
+  "scales": [
+    [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        4,
+        5
+      ]
+    ],
+    [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    ]
+  ],
+  "weights": [
+    0.5,
+    0.5
+  ],
+  "normalize": true,
+  "n_samples": 920,
+  "n_qubits": 6,
+  "entanglement": "linear",
+  "per_scale_diag_means": [
+    0.6862466968391785,
+    0.9999999999999982
+  ],
+  "dataset": "heart_disease",
+  "d": 6,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 920,
+    "trace": 920.0,
+    "lambda_min": -2.7681055335915618e-15,
+    "lambda_max": 146.860666082229,
+    "effective_rank@1e-06": 918,
+    "threshold": 1e-06
+  }
+}
