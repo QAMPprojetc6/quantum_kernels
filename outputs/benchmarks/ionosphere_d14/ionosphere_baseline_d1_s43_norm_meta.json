@@ -1,0 +1,28 @@
+{
+  "kernel": "baseline",
+  "feature_map": "zz_qiskit",
+  "feature_map_impl": "qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 43,
+  "num_qubits": 14,
+  "entanglement": "linear",
+  "dataset": "ionosphere",
+  "n_samples": 351,
+  "d": 14,
+  "normalize": true,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 351,
+    "trace": 351.0000000000001,
+    "lambda_min": 1.2321577619320595e-15,
+    "lambda_max": 2.0000361105725557,
+    "effective_rank@1e-06": 350,
+    "threshold": 1e-06
+  }
+}

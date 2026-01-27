@@ -1,0 +1,55 @@
+{
+  "kernel": "multiscale",
+  "feature_map": "zz_qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 43,
+  "scales": [
+    [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    [
+      [
+        0,
+        1,
+        2,
+        3
+      ]
+    ]
+  ],
+  "weights": [
+    0.5,
+    0.5
+  ],
+  "normalize": true,
+  "n_samples": 351,
+  "n_qubits": 4,
+  "entanglement": "linear",
+  "per_scale_diag_means": [
+    0.7663943131257431,
+    0.9999999999999983
+  ],
+  "dataset": "ionosphere",
+  "d": 4,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "spectrum_stats": {
+    "n": 351,
+    "trace": 351.00000000000006,
+    "lambda_min": -1.2733996836628137e-14,
+    "lambda_max": 64.299928711381,
+    "effective_rank@1e-06": 185,
+    "threshold": 1e-06
+  }
+}
