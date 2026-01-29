@@ -139,8 +139,11 @@ These figures show **delta values relative to the baseline kernel** for each dat
 ### Global summaries
 
 ![Mean delta test acc across datasets](../../figs/checkpoint3/deltas/bar_mean_delta_test_acc.png)
+*Explanation:* Bar plot of **mean test-accuracy delta vs baseline** per dataset, averaged across all `d` values. Positive bars indicate that local or multiscale improves accuracy on average; negative bars indicate a drop relative to baseline.
 ![Heatmap: delta test acc (local vs baseline)](../../figs/checkpoint3/deltas/heatmap_delta_test_acc_local.png)
+*Explanation:* Heatmap of **test-accuracy delta for local vs baseline** across datasets (rows) and `d` values (columns). **Green = improvement**, **red = degradation**, **white ≈ no change**.
 ![Heatmap: delta test acc (multiscale vs baseline)](../../figs/checkpoint3/deltas/heatmap_delta_test_acc_multiscale.png)
+*Explanation:* Heatmap of **test-accuracy delta for multiscale vs baseline** across datasets and `d` values. This highlights where multi-scale helps or hurts relative to baseline.
 
 ### breast_cancer
 ![breast_cancer: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_breast_cancer.png)
@@ -177,6 +180,13 @@ These figures show **delta values relative to the baseline kernel** for each dat
 ![heart_disease: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_heart_disease.png)
 ![heart_disease: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_heart_disease.png)
 ![heart_disease: tradeoff](../../figs/checkpoint3/deltas/tradeoff_heart_disease.png)
+
+
+**How to read the four per-dataset plot types (applies to all datasets above):**
+- **delta_test_acc**: Test accuracy **difference vs baseline** as `d` increases. Values above 0 mean the method helps; below 0 means it hurts.
+- **delta_offdiag_p50**: Change in **off-diagonal median (p50)** vs baseline. Higher values indicate **less concentration** (more similarity structure preserved).
+- **delta_eff_rank**: Change in **effective rank** vs baseline. Higher values mean **richer spectrum**; lower values indicate more collapse.
+- **tradeoff**: Scatter of **off-diag p50 vs test accuracy** for baseline/local/multiscale. This shows whether reduced concentration aligns with better accuracy.
 
 ----
 
