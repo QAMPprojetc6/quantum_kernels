@@ -471,3 +471,34 @@ if __name__ == "__main__":
 #
 # python -m analysis.summarize_benchmarks --roots outputs/benchmarks/breast_cancer_d4 outputs/benchmarks/breast_cancer_d6 outputs/benchmarks/parkinsons_d16 --out outputs/benchmarks/summary_all.csv --md  outputs/benchmarks/summary_all.md
 #
+# python -m analysis.summarize_benchmarks --roots outputs/benchmarks/breast_cancer_d10 outputs/benchmarks/breast_cancer_d12 outputs/benchmarks/breast_cancer_d14 outputs/benchmarks/breast_cancer_d16 outputs/benchmarks/breast_cancer_d18 outputs/benchmarks/breast_cancer_d20 outputs/benchmarks/breast_cancer_d4 outputs/benchmarks/breast_cancer_d6 outputs/benchmarks/breast_cancer_d8 outputs/benchmarks/exam_score_prediction_subset_d10 outputs/benchmarks/exam_score_prediction_subset_d12 outputs/benchmarks/exam_score_prediction_subset_d14 outputs/benchmarks/exam_score_prediction_subset_d16 outputs/benchmarks/exam_score_prediction_subset_d18 outputs/benchmarks/exam_score_prediction_subset_d20 outputs/benchmarks/exam_score_prediction_subset_d4 outputs/benchmarks/exam_score_prediction_subset_d6 outputs/benchmarks/exam_score_prediction_subset_d8 outputs/benchmarks/heart_disease_d10 outputs/benchmarks/heart_disease_d12 outputs/benchmarks/heart_disease_d14 outputs/benchmarks/heart_disease_d16 outputs/benchmarks/heart_disease_d18 outputs/benchmarks/heart_disease_d20 outputs/benchmarks/heart_disease_d4 outputs/benchmarks/heart_disease_d6 outputs/benchmarks/heart_disease_d8 outputs/benchmarks/ionosphere_d10 outputs/benchmarks/ionosphere_d12 outputs/benchmarks/ionosphere_d14 outputs/benchmarks/ionosphere_d16 outputs/benchmarks/ionosphere_d18 outputs/benchmarks/ionosphere_d20 outputs/benchmarks/ionosphere_d4 outputs/benchmarks/ionosphere_d6 outputs/benchmarks/ionosphere_d8 outputs/benchmarks/parkinsons_d10 outputs/benchmarks/parkinsons_d12 outputs/benchmarks/parkinsons_d14 outputs/benchmarks/parkinsons_d16 outputs/benchmarks/parkinsons_d18 outputs/benchmarks/parkinsons_d20 outputs/benchmarks/parkinsons_d4 outputs/benchmarks/parkinsons_d6 outputs/benchmarks/parkinsons_d8 outputs/benchmarks/star_classification_subset_d10 outputs/benchmarks/star_classification_subset_d12 outputs/benchmarks/star_classification_subset_d14 outputs/benchmarks/star_classification_subset_d16 outputs/benchmarks/star_classification_subset_d18 outputs/benchmarks/star_classification_subset_d20 outputs/benchmarks/star_classification_subset_d4 outputs/benchmarks/star_classification_subset_d6 outputs/benchmarks/star_classification_subset_d8 --out outputs/benchmarks/summary_all.csv --md outputs/benchmarks/summary_all.md --include-paths
+#
+# take all folders that end with "_d*" given a prefix:
+# python -m analysis.summarize_benchmarks --roots $(python - <<'PY'
+# from pathlib import Path
+# wanted = {
+#     "breast_cancer",
+#     "exam_score_prediction",
+#     "exam_score_prediction_subset",
+#     "heart_disease",
+#     "ionosphere",
+#     "parkinsons",
+#     "star_classification",
+#     "star_classification_subset",
+# }
+# roots = []
+# base = Path("outputs/benchmarks")
+# if base.exists():
+#     for p in sorted(base.iterdir()):
+#         if not p.is_dir():
+#             continue
+#         name = p.name
+#         if "_d" not in name:
+#             continue
+#         prefix, dpart = name.rsplit("_d", 1)
+#         if prefix in wanted and dpart.isdigit():
+#             roots.append(p.as_posix())
+# print(" ".join(roots))
+# PY
+# ) --out outputs/benchmarks/summary_all.csv --md outputs/benchmarks/summary_all.md
+#
