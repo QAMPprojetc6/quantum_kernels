@@ -12,9 +12,9 @@
   * **Global (baseline):** standard fidelity kernel.
   * **Local (patch-wise):** similarities via subcircuits or reduced density matrices (RDMs, Reduced Density Matrices), aggregated across patches.
   * **Multi-Scale:** weighted combination of kernels computed at multiple granularities (e.g., pairs -> all qubits).
-* **Minimal experiment pipeline** on small datasets (one synthetic + one small real/tabular).
-* **Diagnostics & plots:** kernel heatmaps, off-diagonal histograms, eigen-spectra, centered alignment vs. labels.
-* **Reproducible artifacts:** `K.npy`, splits, metrics, and figures stored with consistent names.
+* **Experiment pipeline** with TOML-driven sweeps (seeds, depth, `d`, weights) and reproducible outputs.
+* **Diagnostics & plots:** kernel heatmaps, off-diagonal histograms, eigen-spectra, off-diag p50/p95 vs d, effective rank, test accuracy, and delta-vs-baseline analyses.
+* **Reproducible artifacts:** kernels, splits, metrics, and figures stored with consistent names.
 
 Non-goals: large-scale hardware runs, asymptotic theory.
 
@@ -22,20 +22,9 @@ Non-goals: large-scale hardware runs, asymptotic theory.
 
 ## 2) Async team split (1 person = 1 kernel)
 
-* **Global (baseline) - Sarvagya Kaushik**
-
-  * Implements the fidelity kernel with a shared feature map.
-  * Produces baseline plots and metrics.
-
-* **Local (patch-wise) - Debashis Saikia**
-
-  * Implements per-patch kernels (subcircuits or RDM).
-  * Aggregates patches (mean or weighted).
-
-* **Multi-Scale - Claudia Zendejas-Morales**
-
-  * Implements cross-scale combination with simple weights (equal -> tuned later).
-  * Runs ablations (drop one scale).
+* **Global (baseline):** fidelity kernel with shared feature map.
+* **Local (patch-wise):** per-patch kernels (subcircuits or RDM), aggregated (mean/weighted).
+* **Multi-Scale:** cross-scale combination with non-negative weights; supports mixing local + global.
 
 Each person works independently but adheres to the same **interfaces and artifact formats** below.
 
@@ -50,7 +39,7 @@ def build_kernel(
     X,                      # np.ndarray (n_samples, d)
     feature_map="zz",       # shared across kernels
     depth=1,                # {1, 2} to start
-    backend="statevector",  # "statevector" | "sampling"
+    backend="statevector",  # "statevector" only in current implementation
     seed=42,
     **kwargs                # kernel-specific (see below)
 ):
@@ -63,21 +52,24 @@ def build_kernel(
 
 Kernel-specific `**kwargs`:
 
-* **Global:** (optional) `shots`, `noise_model`.
+* **Global:** `entanglement` (sampling backend not implemented).
 * **Local:** `partitions=[(0,1),(2,3)]`, `method="subcircuits"|"rdm"`, `agg="mean"`, `weights=None`.
-* **Multi-Scale:** `scales=[[(0,1),(2,3)],[(0,1,2,3)]]`, `weights=[0.5,0.5]`.
+* **Multi-Scale:** `scales=[[(0,1),(2,3)],[(0,1,2,3)]]`, `weights=[0.5,0.5]`, `normalize=True`.
 
 We share **one** `feature_maps.py` to avoid duplication.
 
 ### 3.2 Artifacts (names & formats)
 
-* Kernel matrix: `outputs/K_{kernel}-{dataset}_{seed}.npy`
-* Metadata: `outputs/meta_{kernel}-{dataset}_{seed}.json`
-* Splits (shared by all): `outputs/splits_{dataset}_{seed}.json`
-* Plots:
-  * `figs/{kernel}-{dataset}_{seed}_matrix.png`
-  * `figs/{kernel}-{dataset}_{seed}_offdiag_hist.png`
-  * `figs/{kernel}-{dataset}_{seed}_spectrum.png`
+* Kernel matrix: `outputs/benchmarks/<dataset>_d*/<case>_K.npy`
+* Metadata: `outputs/benchmarks/<dataset>_d*/<case>_meta.json`
+* Splits (shared by all): `outputs/benchmarks/<dataset>_d*/<case>_splits.json`
+* Per-run plots (diagnostics):
+  * `*_matrix.png`, `*_offdiag_hist.png`, `*_spectrum.png`
+* Summaries:
+  * `summary.csv`, `summary.md`, and global `summary_all.*`
+* Aggregate plots:
+  * vs-d curves (`*_concentration_p50_vs_d.png`, `*_effrank_vs_d.png`, `*_testacc_vs_d.png`)
+  * delta analyses (`delta_*`, heatmaps, tradeoffs)
 
 ### 3.3 Quality checklist (each person runs locally)
 
@@ -89,10 +81,10 @@ We share **one** `feature_maps.py` to avoid duplication.
 
 ---
 
-## 4) Shared configuration (single `config.toml`)
+## 4) Shared configuration (TOML files in `configs/`)
 
-One TOML file controls datasets, seeds, feature map, partitions/scales, and paths.
-Everyone reads from the same file to keep experiments comparable.
+TOML files under `configs/` control datasets, seeds, feature map, partitions/scales, and paths.
+`scripts/run_experiment.py` reads these configs to keep experiments comparable.
 
 Note: TOML = Tom's Obvious, Minimal Language. Easy to read and write file, by being minimal and by using human-readable syntax.
 
@@ -100,10 +92,10 @@ Note: TOML = Tom's Obvious, Minimal Language. Easy to read and write file, by be
 
 ## 5) Datasets, parameters, and baselines (common to all)
 
-* **Datasets:** start with `make_circles` (binary) and **Iris** (3-class).
-* **Splits & seeds:** 60/20/20; `seed = 42` (splits saved once and reused).
-* **Feature map:** `zz`; `depth ∈ {1, 2}` (start with `1`).
-* **SVM (precomputed kernel):** `C ∈ {0.1, 1, 10}`.
+* **Datasets:** `make_circles`, `iris`, `breast_cancer`, `parkinsons`, `exam_score_prediction`, `star_classification`, `ionosphere`, `heart_disease`.
+* **Splits & seeds:** 60/20/20; `seed_grid` in configs (splits saved and reused).
+* **Feature map:** ZZ-style; `depth_grid` in configs (default depth = 1).
+* **SVM (precomputed kernel):** `C_grid` in configs.
 * **Local default:** contiguous pairs for partitions.
 * **Multi-Scale default:** `scales = [pairs, all]`, `weights = [0.5, 0.5]`.
 
@@ -113,9 +105,9 @@ Note: TOML = Tom's Obvious, Minimal Language. Easy to read and write file, by be
 
 For each kernel & dataset:
 
-* **Metrics:** Accuracy, and MCC (Matthews Correlation Coefficient).
+* **Metrics:** accuracy (val/test), off-diagonal stats (p50/p95), effective rank, alignment (optional).
 * **Plots:** kernel heatmap; off-diagonal histogram; eigen-spectrum.
-* **Optional:** centered alignment (K vs. labels); light noise robustness.
+* **Aggregate plots:** vs-d curves and delta-vs-baseline summaries.
 
 All code uses fixed seeds; all artifacts saved with the file names above.
 
@@ -132,6 +124,8 @@ All code uses fixed seeds; all artifacts saved with the file names above.
 
 * **(Stretch)** Before **Thu, Jan 30, 2026** (MVP):  
   Identify one dataset where Local or Multi-Scale clearly wins or is more robust.
+
+Status: pipeline extended to multi-dataset sweeps (`d=4..20`), with checkpoint reports under `docs/checkpoints/`.
 
 Minimum meetings required; a short message per milestone would be enough.  
 (It has been difficult to agree on a single schedule among everyone)
@@ -151,9 +145,16 @@ project/
   analysis/
     diagnostics.py         # heatmap, off-diag histogram, spectrum
     eval_svm.py            # SVM with precomputed kernels
-  outputs/                 # K.npy, splits, meta, metrics
-  figs/                    # figures from diagnostics
-  config.toml              # single source of truth for runs
+    summarize_benchmarks.py
+    plot_vs_d.py
+    plot_deltas.py
+  scripts/
+    run_experiment.py
+    run_all_benchmarks.py
+  configs/                 # TOML configs per dataset / sweep
+  outputs/                 # kernels, splits, meta, metrics, summaries
+  figs/                    # figures from diagnostics and aggregate plots
+  docs/                    # checkpoint notes
   README.md
   PLAN.md                  # (this document)
 ```
@@ -164,7 +165,7 @@ project/
 
 * **Incomparable results:** single `config.toml`, shared splits/seed, same feature map/depth.
 * **Non-PSD kernels (numerical):** add `+1e-6 I`, use float64, center if needed.
-* **Slow runs:** keep depth small (1–2), cache circuits, use small `n` first.
+* **Slow runs:** keep depth small (1–2), use subsets, or enable Nyström for large datasets.
 * **Code divergence:** one shared `feature_maps.py`; identical API across kernels.
 
 ---
@@ -173,8 +174,9 @@ project/
 
 * `build_kernel(...)` implemented with the common signature.
 * Passes the **quality checklist** above.
-* Produces the 3 plots + `K.npy` + `meta.json` for both datasets.
-* Runs with the shared `config.toml` (no hard-coded params).
+* Produces the 3 plots + `K.npy` + `meta.json` for configured datasets.
+* Runs with the shared TOML configs (no hard-coded params).
+* Contributes to summary tables and vs-d / delta plots.
 
 ---
 
@@ -184,53 +186,59 @@ Once the team agrees:
 
 1. We scaffold the repo with the structure above.
 2. We add a **concise `README.md`** (how to run, dependencies, seeds, artifacts).
-3. We create the initial **`config.toml`** (datasets, feature map, partitions/scales, paths).
+3. We create the initial TOML configs (datasets, feature map, partitions/scales, paths).
 
 ---
 
-## Example for the `config.toml` file
+## Example for a TOML config file
 
 ```toml
 # example.toml
 
 [run]
-seed = 42
-dataset = "make_circles"   # then change to other, e.g. "iris"
-n_samples = 150
+dataset = "breast_cancer"
+seed_grid = [42]
+n_features = 8
+pca = true
+val_size = 0.2
 test_size = 0.2
-val_size  = 0.2
 
 [feature_map]
-name = "zz"
-depth = 1
-backend = "statevector"    # or "sampling"
-shots = 0                  # 0 = statevector; >0 = sampling
+name = "zz_qiskit"
+depth_grid = [1]
+entanglement = "linear"
+backend = "statevector"
 
-[baseline_kernel]
-enabled = true
-
-[local_kernel]
-enabled = true
-partitions = [[0,1],[2,3]]   # pairs of qubits
-method = "subcircuits"       # or "rdm"
-agg = "mean"                 # or "weighted"
-weights = []                 # empty = equal weights
-
-[multiscale_kernel]
-enabled = true
-scales = [
-  [[0,1],[2,3]],             # scale S1: pairs
-  [[0,1,2,3]]                # scale S2: pairs
-]
-weights = [0.5, 0.5]         # mix between scales
+[post]
+normalize = true
+center_grid = [false]
+report_rank = true
 
 [svm]
-C = [0.1, 1.0, 10.0]
-kernel = "precomputed"       # we use K that we generate
+C_grid = [0.1, 1.0, 10.0]
 
-[paths]
-outputs = "outputs"
-figs    = "figs"
+[[kernels]]
+name = "baseline"
+enabled = true
+
+[[kernels]]
+name = "local"
+enabled = true
+partitions = [[0,1],[2,3]]
+method = "rdm"
+agg = "mean"
+
+[[kernels]]
+name = "multiscale"
+enabled = true
+scales = [
+  [[0,1],[2,3]],
+  [[0,1,2,3]]
+]
+weights_grid = [[0.5, 0.5]]
+
+[nystrom]
+enabled = false
 ```
 
 ---
