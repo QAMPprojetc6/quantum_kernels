@@ -40,7 +40,7 @@ project/
 
 ## 3) Installation
 
-**Python:** 3.10+ recommended.
+**Python:** 3.12 recommended (tested).
 
 ### 3.1 Environment
 ```bash
