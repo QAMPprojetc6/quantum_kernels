@@ -1,0 +1,38 @@
+{
+  "kernel": "baseline",
+  "feature_map": "zz_qiskit",
+  "feature_map_impl": "qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 44,
+  "num_qubits": 4,
+  "entanglement": "linear",
+  "dataset": "exam_score_prediction",
+  "n_samples": 20000,
+  "d": 4,
+  "normalize": true,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "nystrom": {
+    "enabled": true,
+    "n_landmarks": 500,
+    "diag_samples": 1000,
+    "n_samples_full": 20000,
+    "chunk_size": 256,
+    "landmarks_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/exam_score_prediction_d4/exam_score_prediction_baseline_d1_s44_norm_nystrom_landmarks.json",
+    "diag_idx_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/exam_score_prediction_d4/exam_score_prediction_baseline_d1_s44_norm_nystrom_diag_idx.json",
+    "splits_full_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/exam_score_prediction_d4/exam_score_prediction_baseline_d1_s44_norm_splits_full.json"
+  },
+  "spectrum_stats": {
+    "n": 1000,
+    "trace": 1000.0,
+    "lambda_min": -2.2702386349827746e-14,
+    "lambda_max": 64.73094523045216,
+    "effective_rank@1e-06": 185,
+    "threshold": 1e-06
+  }
+}

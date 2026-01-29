@@ -1,0 +1,89 @@
+{
+  "kernel": "multiscale",
+  "feature_map": "zz_qiskit",
+  "depth": 1,
+  "backend": "statevector",
+  "seed": 42,
+  "scales": [
+    [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        10,
+        11
+      ]
+    ],
+    [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ]
+    ]
+  ],
+  "weights": [
+    0.5,
+    0.5
+  ],
+  "normalize": true,
+  "n_samples": 20000,
+  "n_qubits": 12,
+  "entanglement": "linear",
+  "per_scale_diag_means": [
+    0.6186679098259645,
+    0.999999999999996
+  ],
+  "dataset": "exam_score_prediction",
+  "d": 12,
+  "center": false,
+  "C_grid": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "nystrom": {
+    "enabled": true,
+    "n_landmarks": 500,
+    "diag_samples": 1000,
+    "n_samples_full": 20000,
+    "chunk_size": 256,
+    "landmarks_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/exam_score_prediction_d12/exam_score_prediction_multiscale_multiscale_d1_s42_w0p5-0p5_norm_nystrom_landmarks.json",
+    "diag_idx_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/exam_score_prediction_d12/exam_score_prediction_multiscale_multiscale_d1_s42_w0p5-0p5_norm_nystrom_diag_idx.json",
+    "splits_full_path": "/Users/clausia/My Drive/QCommunities/Qiskit/Advocate/2025 - relaunch/QAMP25/repos-mac/quantum_kernels/outputs/benchmarks/exam_score_prediction_d12/exam_score_prediction_multiscale_multiscale_d1_s42_w0p5-0p5_norm_splits_full.json"
+  },
+  "spectrum_stats": {
+    "n": 1000,
+    "trace": 1000.0000000000003,
+    "lambda_min": 0.03522741937993196,
+    "lambda_max": 158.65815108471514,
+    "effective_rank@1e-06": 1000,
+    "threshold": 1e-06
+  }
+}
