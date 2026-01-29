@@ -127,7 +127,7 @@ def _read_rows(path: Path) -> List[Dict[str, str]]:
     return rows
 
 
-_SEED_RE = re.compile(r"_s(?P<seed>\\d+)(?:_|$)")
+_SEED_RE = re.compile(r"_s(?P<seed>\d+)(?:_|$)")
 
 
 def _extract_seed_from_str(s: str) -> Optional[int]:
