@@ -95,40 +95,46 @@ Across datasets, the same general pattern appears:
 ## Plots vs d (figs/checkpoint3/vs_d)
 
 ### breast_cancer
-![breast_cancer: concentration p50 vs d](../../figs/checkpoint3/vs_d/breast_cancer_concentration_p50_vs_d.png)
-![breast_cancer: concentration p95 vs d](../../figs/checkpoint3/vs_d/breast_cancer_concentration_p95_vs_d.png)
-![breast_cancer: effective rank vs d](../../figs/checkpoint3/vs_d/breast_cancer_effrank_vs_d.png)
-![breast_cancer: test accuracy vs d](../../figs/checkpoint3/vs_d/breast_cancer_testacc_vs_d.png)
+| | |
+|---|---|
+| ![breast_cancer: concentration p50 vs d](../../figs/checkpoint3/vs_d/breast_cancer_concentration_p50_vs_d.png) | ![breast_cancer: concentration p95 vs d](../../figs/checkpoint3/vs_d/breast_cancer_concentration_p95_vs_d.png) |
+| ![breast_cancer: effective rank vs d](../../figs/checkpoint3/vs_d/breast_cancer_effrank_vs_d.png) | ![breast_cancer: test accuracy vs d](../../figs/checkpoint3/vs_d/breast_cancer_testacc_vs_d.png) |
 
 ### parkinsons
-![parkinsons: concentration p50 vs d](../../figs/checkpoint3/vs_d/parkinsons_concentration_p50_vs_d.png)
-![parkinsons: concentration p95 vs d](../../figs/checkpoint3/vs_d/parkinsons_concentration_p95_vs_d.png)
-![parkinsons: effective rank vs d](../../figs/checkpoint3/vs_d/parkinsons_effrank_vs_d.png)
-![parkinsons: test accuracy vs d](../../figs/checkpoint3/vs_d/parkinsons_testacc_vs_d.png)
+| | |
+|---|---|
+| ![parkinsons: concentration p50 vs d](../../figs/checkpoint3/vs_d/parkinsons_concentration_p50_vs_d.png) | ![parkinsons: concentration p95 vs d](../../figs/checkpoint3/vs_d/parkinsons_concentration_p95_vs_d.png) |
+| ![parkinsons: effective rank vs d](../../figs/checkpoint3/vs_d/parkinsons_effrank_vs_d.png) | ![parkinsons: test accuracy vs d](../../figs/checkpoint3/vs_d/parkinsons_testacc_vs_d.png) |
 
 ### exam_score_prediction (subset)
-![exam_score_prediction: concentration p50 vs d](../../figs/checkpoint3/vs_d/exam_score_prediction_concentration_p50_vs_d.png)
-![exam_score_prediction: concentration p95 vs d](../../figs/checkpoint3/vs_d/exam_score_prediction_concentration_p95_vs_d.png)
-![exam_score_prediction: effective rank vs d](../../figs/checkpoint3/vs_d/exam_score_prediction_effrank_vs_d.png)
-![exam_score_prediction: test accuracy vs d](../../figs/checkpoint3/vs_d/exam_score_prediction_testacc_vs_d.png)
+| | |
+|---|---|
+| ![exam_score_prediction: concentration p50 vs d](../../figs/checkpoint3/vs_d/exam_score_prediction_concentration_p50_vs_d.png) | ![exam_score_prediction: concentration p95 vs d](../../figs/checkpoint3/vs_d/exam_score_prediction_concentration_p95_vs_d.png) |
+| ![exam_score_prediction: effective rank vs d](../../figs/checkpoint3/vs_d/exam_score_prediction_effrank_vs_d.png) | ![exam_score_prediction: test accuracy vs d](../../figs/checkpoint3/vs_d/exam_score_prediction_testacc_vs_d.png) |
 
 ### star_classification (subset)
-![star_classification: concentration p50 vs d](../../figs/checkpoint3/vs_d/star_classification_concentration_p50_vs_d.png)
-![star_classification: concentration p95 vs d](../../figs/checkpoint3/vs_d/star_classification_concentration_p95_vs_d.png)
-![star_classification: effective rank vs d](../../figs/checkpoint3/vs_d/star_classification_effrank_vs_d.png)
-![star_classification: test accuracy vs d](../../figs/checkpoint3/vs_d/star_classification_testacc_vs_d.png)
+| | |
+|---|---|
+| ![star_classification: concentration p50 vs d](../../figs/checkpoint3/vs_d/star_classification_concentration_p50_vs_d.png) | ![star_classification: concentration p95 vs d](../../figs/checkpoint3/vs_d/star_classification_concentration_p95_vs_d.png) |
+| ![star_classification: effective rank vs d](../../figs/checkpoint3/vs_d/star_classification_effrank_vs_d.png) | ![star_classification: test accuracy vs d](../../figs/checkpoint3/vs_d/star_classification_testacc_vs_d.png) |
 
 ### ionosphere
-![ionosphere: concentration p50 vs d](../../figs/checkpoint3/vs_d/ionosphere_concentration_p50_vs_d.png)
-![ionosphere: concentration p95 vs d](../../figs/checkpoint3/vs_d/ionosphere_concentration_p95_vs_d.png)
-![ionosphere: effective rank vs d](../../figs/checkpoint3/vs_d/ionosphere_effrank_vs_d.png)
-![ionosphere: test accuracy vs d](../../figs/checkpoint3/vs_d/ionosphere_testacc_vs_d.png)
+| | |
+|---|---|
+| ![ionosphere: concentration p50 vs d](../../figs/checkpoint3/vs_d/ionosphere_concentration_p50_vs_d.png) | ![ionosphere: concentration p95 vs d](../../figs/checkpoint3/vs_d/ionosphere_concentration_p95_vs_d.png) |
+| ![ionosphere: effective rank vs d](../../figs/checkpoint3/vs_d/ionosphere_effrank_vs_d.png) | ![ionosphere: test accuracy vs d](../../figs/checkpoint3/vs_d/ionosphere_testacc_vs_d.png) |
 
 ### heart_disease
-![heart_disease: concentration p50 vs d](../../figs/checkpoint3/vs_d/heart_disease_concentration_p50_vs_d.png)
-![heart_disease: concentration p95 vs d](../../figs/checkpoint3/vs_d/heart_disease_concentration_p95_vs_d.png)
-![heart_disease: effective rank vs d](../../figs/checkpoint3/vs_d/heart_disease_effrank_vs_d.png)
-![heart_disease: test accuracy vs d](../../figs/checkpoint3/vs_d/heart_disease_testacc_vs_d.png)
+| | |
+|---|---|
+| ![heart_disease: concentration p50 vs d](../../figs/checkpoint3/vs_d/heart_disease_concentration_p50_vs_d.png) | ![heart_disease: concentration p95 vs d](../../figs/checkpoint3/vs_d/heart_disease_concentration_p95_vs_d.png) |
+| ![heart_disease: effective rank vs d](../../figs/checkpoint3/vs_d/heart_disease_effrank_vs_d.png) | ![heart_disease: test accuracy vs d](../../figs/checkpoint3/vs_d/heart_disease_testacc_vs_d.png) |
+
+**How to read the vs-d plots (applies to all datasets above):**
+- **Concentration p50/p95 vs d:** median (p50) and tail (p95) of off-diagonal kernel entries; values drifting toward 0 indicate stronger kernel concentration as `d` grows.
+- **Effective rank vs d:** spectrum richness; higher effective rank means less collapse and a more informative kernel geometry.
+- **Test accuracy vs d:** downstream SVM performance; improvements here are dataset-dependent and do not always track concentration alone.
+- **Typical pattern:** baseline concentrates fastest with increasing `d`, local stays least concentrated, and multi-scale tends to fall in between due to mixing global + local structure.
 
 ----
 
@@ -146,40 +152,40 @@ These figures show **delta values relative to the baseline kernel** for each dat
 *Explanation:* Heatmap of **test-accuracy delta for multiscale vs baseline** across datasets and `d` values. This highlights where multi-scale helps or hurts relative to baseline.
 
 ### breast_cancer
-![breast_cancer: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_breast_cancer.png)
-![breast_cancer: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_breast_cancer.png)
-![breast_cancer: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_breast_cancer.png)
-![breast_cancer: tradeoff](../../figs/checkpoint3/deltas/tradeoff_breast_cancer.png)
+| | |
+|---|---|
+| ![breast_cancer: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_breast_cancer.png) | ![breast_cancer: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_breast_cancer.png) |
+| ![breast_cancer: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_breast_cancer.png) | ![breast_cancer: tradeoff](../../figs/checkpoint3/deltas/tradeoff_breast_cancer.png) |
 
 ### parkinsons
-![parkinsons: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_parkinsons.png)
-![parkinsons: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_parkinsons.png)
-![parkinsons: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_parkinsons.png)
-![parkinsons: tradeoff](../../figs/checkpoint3/deltas/tradeoff_parkinsons.png)
+| | |
+|---|---|
+| ![parkinsons: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_parkinsons.png) | ![parkinsons: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_parkinsons.png) |
+| ![parkinsons: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_parkinsons.png) | ![parkinsons: tradeoff](../../figs/checkpoint3/deltas/tradeoff_parkinsons.png) |
 
 ### exam_score_prediction (subset)
-![exam_score_prediction: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_exam_score_prediction.png)
-![exam_score_prediction: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_exam_score_prediction.png)
-![exam_score_prediction: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_exam_score_prediction.png)
-![exam_score_prediction: tradeoff](../../figs/checkpoint3/deltas/tradeoff_exam_score_prediction.png)
+| | |
+|---|---|
+| ![exam_score_prediction: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_exam_score_prediction.png) | ![exam_score_prediction: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_exam_score_prediction.png) |
+| ![exam_score_prediction: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_exam_score_prediction.png) | ![exam_score_prediction: tradeoff](../../figs/checkpoint3/deltas/tradeoff_exam_score_prediction.png) |
 
 ### star_classification (subset)
-![star_classification: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_star_classification.png)
-![star_classification: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_star_classification.png)
-![star_classification: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_star_classification.png)
-![star_classification: tradeoff](../../figs/checkpoint3/deltas/tradeoff_star_classification.png)
+| | |
+|---|---|
+| ![star_classification: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_star_classification.png) | ![star_classification: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_star_classification.png) |
+| ![star_classification: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_star_classification.png) | ![star_classification: tradeoff](../../figs/checkpoint3/deltas/tradeoff_star_classification.png) |
 
 ### ionosphere
-![ionosphere: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_ionosphere.png)
-![ionosphere: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_ionosphere.png)
-![ionosphere: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_ionosphere.png)
-![ionosphere: tradeoff](../../figs/checkpoint3/deltas/tradeoff_ionosphere.png)
+| | |
+|---|---|
+| ![ionosphere: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_ionosphere.png) | ![ionosphere: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_ionosphere.png) |
+| ![ionosphere: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_ionosphere.png) | ![ionosphere: tradeoff](../../figs/checkpoint3/deltas/tradeoff_ionosphere.png) |
 
 ### heart_disease
-![heart_disease: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_heart_disease.png)
-![heart_disease: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_heart_disease.png)
-![heart_disease: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_heart_disease.png)
-![heart_disease: tradeoff](../../figs/checkpoint3/deltas/tradeoff_heart_disease.png)
+| | |
+|---|---|
+| ![heart_disease: delta test acc](../../figs/checkpoint3/deltas/delta_delta_test_acc_heart_disease.png) | ![heart_disease: delta off-diag p50](../../figs/checkpoint3/deltas/delta_delta_offdiag_p50_heart_disease.png) |
+| ![heart_disease: delta effective rank](../../figs/checkpoint3/deltas/delta_delta_eff_rank_heart_disease.png) | ![heart_disease: tradeoff](../../figs/checkpoint3/deltas/tradeoff_heart_disease.png) |
 
 
 **How to read the four per-dataset plot types (applies to all datasets above):**
