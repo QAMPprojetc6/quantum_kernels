@@ -1,0 +1,13 @@
+Dataset,Kernel,Mean delta test acc
+breast_cancer,local,0.0350877192982456
+breast_cancer,multiscale,0.04385964912280701
+exam_score_prediction,local,-0.002314814814814819
+exam_score_prediction,multiscale,-0.0020370370370370473
+heart_disease,local,0.042673107890499225
+heart_disease,multiscale,0.04468599033816426
+ionosphere,local,0.0052164840897235155
+ionosphere,multiscale,0.006259780907668235
+parkinsons,local,0.0
+parkinsons,multiscale,-0.0009496676163342796
+star_classification,local,0.011296296296296311
+star_classification,multiscale,0.011111111111111146
