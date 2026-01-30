@@ -2,8 +2,3 @@
 
 # Normalize text endings to LF in the repo
 * text=auto eol=lf
-
-# Also for scripts
-*.sh text eol=lf
-*.py text eol=lf
-*.md text eol=lf
