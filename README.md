@@ -158,6 +158,8 @@ Kernel-specific kwargs:
 
 This is the **recommended flow** to generate all tables and plots:
 
+More runnable examples are collected in **[docs/RECIPES.md](docs/RECIPES.md)**.
+
 1) **Run benchmarks (build kernels + diagnostics + SVM metrics)**  
 ```bash
 python -m scripts.run_experiment --config configs/breast_cancer_d8.toml
