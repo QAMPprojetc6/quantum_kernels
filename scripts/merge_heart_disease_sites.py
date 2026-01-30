@@ -138,7 +138,7 @@ if __name__ == "__main__":
     # write merged multi-site dataset to a single file (with headers)
     out_path = Path(DATA_DIR) / "heart_disease_processed_all_sites.csv"
     df["num"] = (df["num"] > 0).astype(int)  # make target binary (0=no disease, 1=disease)
-    df.to_csv(out_path, index=False)  # includes headers by default
+    df.to_csv(out_path, index=False, line_terminator="\n", encoding="utf-8")  # includes headers by default
     print(f"Saved merged dataset to: {out_path.resolve()}")
 
     # Drop rows with missing target

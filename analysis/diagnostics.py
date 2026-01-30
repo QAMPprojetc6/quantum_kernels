@@ -77,7 +77,7 @@ def main(kernel_path: str, save_prefix: str, meta_path: Optional[str] = None) ->
         with open(meta_path, "r") as f:
             meta = json.load(f)
         # Save a short text summary next to figures (optional)
-        with open(f"{save_prefix}_meta.txt", "w") as f:
+        with open(f"{save_prefix}_meta.txt", "w", encoding="utf-8", newline="\n") as f:
             f.write(json.dumps(meta, indent=2))
 
 

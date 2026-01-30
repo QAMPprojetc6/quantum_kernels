@@ -130,8 +130,8 @@ def main(kernel_path: str, splits_path: str, Cs: List[float], out_csv: str):
     row = [kernel_path, splits_path, metrics["best_C"], metrics["val_acc"], metrics["test_acc"]]
 
     write_header = not os.path.exists(out_csv)
-    with open(out_csv, "a", newline="") as f:
-        writer = csv.writer(f)
+    with open(out_csv, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f, lineterminator="\n")
         if write_header:
             writer.writerow(header)
         writer.writerow(row)

@@ -386,7 +386,7 @@ def _write_curves_csv(out_csv: Path, xs: List[int], curves: Dict[str, Dict[str, 
             fields.append(f"{k}.{m}.std")
 
     with out_csv.open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
+        w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         for d in xs:
             row: Dict[str, Any] = {"d": d}
@@ -577,4 +577,3 @@ if __name__ == "__main__":
 # Ex: only parkinsons with zz_qiskit, depth=1, centered=False, and fixed multiscale to [0.5, 0.5]
 # python -m analysis.plot_vs_d --summary outputs/benchmarks/summary_all.md --out figs/checkpoint2/vs_d --dataset parkinsons --feature-map zz_qiskit --depth 1 --entanglement linear --centered 0 --multiscale-weights "[0.5, 0.5]" --also-p95
 #
-

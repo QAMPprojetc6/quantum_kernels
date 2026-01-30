@@ -75,7 +75,7 @@ def _json_safe(obj: Any) -> Any:
 
 def _dump_json(path: Path, obj: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(_json_safe(obj), indent=2), encoding="utf-8")
+    path.write_text(json.dumps(_json_safe(obj), indent=2), encoding="utf-8", newline="\n")
 
 
 def _fmt_float_tag(x: float) -> str:
@@ -134,7 +134,7 @@ def _write_metrics_row(metrics_csv: Path, row: Dict[str, Any], fieldnames: List[
     metrics_csv.parent.mkdir(parents=True, exist_ok=True)
     write_header = not metrics_csv.exists()
     with metrics_csv.open("a", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         if write_header:
             w.writeheader()
         # ensure all fields exist
@@ -319,7 +319,7 @@ def _run_one(
         stats = spectrum_stats(K_used)
         meta_out["spectrum_stats"] = stats
         spec_path = out_prefix.with_name(out_prefix.name + "_spectrum.txt")
-        spec_path.write_text(json.dumps(_json_safe(stats), indent=2), encoding="utf-8")
+        spec_path.write_text(json.dumps(_json_safe(stats), indent=2), encoding="utf-8", newline="\n")
 
     meta_path = out_prefix.with_name(out_prefix.name + "_meta.json")
     _dump_json(meta_path, meta_out)

@@ -356,7 +356,7 @@ def summarize_one(trip: ArtifactTriplet, metrics_index: Dict[str, Dict[str, str]
 def write_csv(path: Path, rows: List[Dict[str, Any]], fieldnames: List[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         w.writeheader()
         for r in rows:
             w.writerow({k: r.get(k, "") for k in fieldnames})
@@ -377,7 +377,7 @@ def write_markdown(path: Path, rows: List[Dict[str, Any]], fieldnames: List[str]
     for r in rows:
         md.append("| " + " | ".join(fmt(r.get(k, "")) for k in fieldnames) + " |")
 
-    path.write_text("\n".join(md), encoding="utf-8")
+    path.write_text("\n".join(md), encoding="utf-8", newline="\n")
 
 
 def main():

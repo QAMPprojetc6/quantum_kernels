@@ -502,7 +502,7 @@ def save_json(path: str, obj: Dict) -> None:
         # Fallback
         raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
 
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(obj, f, indent=2, default=_default)
 
 
@@ -519,7 +519,7 @@ def save_splits(path: str, train_idx: np.ndarray, val_idx: np.ndarray, test_idx:
 
 
 def write_spectrum_txt(path: str, stats: Dict) -> None:
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         for k, v in stats.items():
             f.write(f"{k}: {v}\n")
 
@@ -529,8 +529,8 @@ def append_metrics_row(metrics_csv: str, header: list, row: list) -> None:
     Append a row with the same CSV schema used by the demo scripts.
     """
     write_header = not os.path.exists(metrics_csv)
-    with open(metrics_csv, "a", newline="") as f:
-        w = csv.writer(f)
+    with open(metrics_csv, "a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, lineterminator="\n")
         if write_header:
             w.writerow(header)
         w.writerow(row)
