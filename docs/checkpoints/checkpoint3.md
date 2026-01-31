@@ -196,6 +196,22 @@ These figures show **delta values relative to the baseline kernel** for each dat
 
 ----
 
+## Spectra comparisons (figs/checkpoint3/spectra)
+
+| | |
+|---|---|
+| ![breast_cancer: spectrum compare (d=12)](../../figs/checkpoint3/spectra/breast_cancer_d12_spectrum_compare.png) | ![parkinsons: spectrum compare (d=12)](../../figs/checkpoint3/spectra/parkinsons_d12_spectrum_compare.png) |
+| ![exam_score_prediction: spectrum compare (d=12)](../../figs/checkpoint3/spectra/exam_score_prediction_d12_spectrum_compare.png) | ![star_classification: spectrum compare (d=12)](../../figs/checkpoint3/spectra/star_classification_d12_spectrum_compare.png) |
+| ![ionosphere: spectrum compare (d=12)](../../figs/checkpoint3/spectra/ionosphere_d12_spectrum_compare.png) | ![heart_disease: spectrum compare (d=12)](../../figs/checkpoint3/spectra/heart_disease_d12_spectrum_compare.png) |
+
+**How to read these spectrum plots (applies to all datasets above):**
+- **Each curve is the sorted eigen-spectrum** of the kernel (baseline/local/multiscale) at fixed `d` (here, `d=12`).
+- **Higher, slower-decaying tails** indicate a richer spectrum (less collapse); a **sharp drop** indicates stronger concentration.
+- **Shaded bands show variability across seeds** (mean ± std).
+- If trace-normalized and/or log-scaled, comparisons emphasize **shape** and **tail behavior** rather than absolute scale.
+
+----
+
 ## Notes for future work
 
 - Revisit Nyström runs on larger datasets.

@@ -71,6 +71,15 @@ python -m analysis.summarize_benchmarks --roots outputs/benchmarks/breast_cancer
 python -m analysis.plot_vs_d --summary outputs/benchmarks/summary_all.md --out figs/checkpoint3/vs_d --also-p95
 ```
 
+### Spectra comparison (baseline/local/multiscale, mean±std across seeds)
+```bash
+python -m analysis.plot_spectra_compare --summary outputs/benchmarks/summary_all.csv --out figs/checkpoint3/spectra --d 12 --datasets breast_cancer parkinsons exam_score_prediction star_classification ionosphere heart_disease
+```
+Optional flags:
+- `--normalize-trace` (compare shapes, not scale)
+- `--skip-first N` (drop the top N eigenvalues before aggregation)
+- `--log-scale` (semilogy for wide dynamic range)
+
 ### Delta analyses (vs baseline)
 ```bash
 python -m analysis.plot_deltas --summary outputs/benchmarks/summary_all.csv --out figs/checkpoint3/deltas
