@@ -71,6 +71,11 @@ python -m analysis.summarize_benchmarks --roots outputs/benchmarks/breast_cancer
 python -m analysis.plot_vs_d --summary outputs/benchmarks/summary_all.md --out figs/checkpoint3/vs_d --also-p95
 ```
 
+### Best C vs d (baseline/local/multiscale in one plot)
+```bash
+python -m analysis.plot_c_vs_d --summary outputs/benchmarks/summary_all.csv --out figs/checkpoint3/c_vs_d
+```
+
 ### Spectra comparison (baseline/local/multiscale, mean±std across seeds)
 ```bash
 python -m analysis.plot_spectra_compare --summary outputs/benchmarks/summary_all.csv --out figs/checkpoint3/spectra --d 12 --datasets breast_cancer parkinsons exam_score_prediction star_classification ionosphere heart_disease

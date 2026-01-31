@@ -212,6 +212,21 @@ These figures show **delta values relative to the baseline kernel** for each dat
 
 ----
 
+## Best C vs d (figs/checkpoint3/c_vs_d)
+
+| | |
+|---|---|
+| ![breast_cancer: best C vs d](../../figs/checkpoint3/c_vs_d/breast_cancer_bestC_vs_d.png) | ![parkinsons: best C vs d](../../figs/checkpoint3/c_vs_d/parkinsons_bestC_vs_d.png) |
+| ![exam_score_prediction: best C vs d](../../figs/checkpoint3/c_vs_d/exam_score_prediction_bestC_vs_d.png) | ![star_classification: best C vs d](../../figs/checkpoint3/c_vs_d/star_classification_bestC_vs_d.png) |
+| ![ionosphere: best C vs d](../../figs/checkpoint3/c_vs_d/ionosphere_bestC_vs_d.png) | ![heart_disease: best C vs d](../../figs/checkpoint3/c_vs_d/heart_disease_bestC_vs_d.png) |
+
+**How to read these best-C plots (applies to all datasets above):**
+- **Each curve shows the most frequently selected `C`** (mode across seeds) for baseline/local/multiscale at each `d`.
+- **Stable, flat curves** indicate consistent hyperparameter selection across seeds; **step changes** indicate regime shifts in model capacity as `d` increases.
+- Differences between kernels reflect how kernel geometry affects **regularization needs** for the SVM.
+
+----
+
 ## Notes for future work
 
 - Revisit Nyström runs on larger datasets.
