@@ -5,6 +5,10 @@
 **Goal:** Build and evaluate quantum kernels for SVMs and test whether **local (patch-wise)** and **multi-scale** kernels mitigate **exponential concentration** as qubit count (dimension `d`) and/or depth increase.  
 **Status:** Active research codebase with reproducible benchmarks, summaries, and plots (see checkpoint docs).
 
+**Project definition (QAMP 2025):** https://github.com/qiskit-advocate/qamp-2025/issues/6
+
+**Project report:** For a complete technical description, consult the [project report and technical overview](https://qczm.link/qkernels-doc).
+
 ---
 
 ## 1) Overview
@@ -289,17 +293,20 @@ Some large datasets are run as **subsets** for tractability; see `configs/` and 
 
 ## 11) License & citation
 
-**License:** TBD (MIT suggested).  
+**License:** MIT (see `LICENSE`).  
 If you use this code, please cite the project and relevant QML/quantum-kernel references.
 
 ---
 
 ## 12) Glossary (quick)
 
+- **C-grid:** Discrete grid of SVM C values used for validation selection.
 - **MCC:** Matthews Correlation Coefficient (robust classification metric).
 - **Nyström:** Low-rank kernel approximation using landmarks.
+- **PCA:** Principal Component Analysis (optional dimensionality reduction).
 - **PSD:** Positive Semi-Definite.
 - **RDM:** Reduced Density Matrix.
+- **SVM:** Support Vector Machine.
 - **TOML:** Simple, human-readable configuration format.
 
 ---
