@@ -7,6 +7,8 @@
 
 **Project definition (QAMP 2025):** https://github.com/qiskit-advocate/qamp-2025/issues/6
 
+**Project summary:** For a summary of this project at the end of the QAMP 2025, please [read this](docs/checkpoints/checkpoint3.md).
+
 **Project report:** For a complete technical description, consult the [project report and technical overview](https://qczm.link/qkernels-doc).
 
 ---
